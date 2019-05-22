@@ -16,7 +16,7 @@ func main() {
 
 	status := "Beginning setup."
 	fmt.Println(status)
-	status = csvSetup()
+	status = csvSetup("ColorChallengeOutput")
 	fmt.Println(status)
 	imgColorPrevalence, status := extractURLs("input.txt")
 
@@ -84,9 +84,9 @@ the sample in half to find where the pixels would be the same.
 
  */
 
-func csvSetup() string {
+func csvSetup(filename string) string {
 
-	filename := exporttocsv.CreateCSV("ColorChallengeOutput")
+	filename = exporttocsv.CreateCSV(filename)
 	headerRecord := []string{"URL", "top_color1", "top_color2", "top_color3"}
 	exporttocsv.Export(filename, headerRecord)
 
@@ -94,6 +94,10 @@ func csvSetup() string {
 }
 
 func extractURLs(filename string) (map[string]map[rgb]int, string) {
+	// Think on this, should I do a batch extraction or have a go func deal
+	// with each individual URL with a pointer/counter to reference the last
+	// URL extracted?
+
 	f, err := os.Open(filename)
 	errorlogging.ErrorCheck("URL extraction failed during setup.", err)
 	defer f.Close()
