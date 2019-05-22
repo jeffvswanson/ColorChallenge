@@ -10,7 +10,7 @@ import (
 	"github.com/jeffvswanson/colorchallenge/pkg/errorlogging"
 )
 
-type rgb struct {
+type colorCode struct {
 	Red, Green, Blue int
 }
 
@@ -95,7 +95,7 @@ func csvSetup(filename string) string {
 	return "CSV setup complete."
 }
 
-func extractURLs(filename string) (map[string]map[rgb]int, string) {
+func extractURLs(filename string) (map[string]map[colorCode]int, string) {
 	// Think on this, should I do a batch extraction or have a go func deal
 	// with each individual URL with a pointer/counter to reference the last
 	// URL extracted?
@@ -109,13 +109,13 @@ func extractURLs(filename string) (map[string]map[rgb]int, string) {
 	// URL represents an image with RGB color codes
 	// Color codes are a key
 	// The number of times a color code appears
-	imgColorPrevalence := make(map[string]map[rgb]int)
+	imgColorPrevalence := make(map[string]map[colorCode]int)
 
 	scanner := bufio.NewScanner(f)
 	scanner.Split(bufio.ScanLines)
 
 	for scanner.Scan() {
-		imgColorPrevalence[scanner.Text()] = make(map[rgb]int)
+		imgColorPrevalence[scanner.Text()] = make(map[colorCode]int)
 	}
 
 	return imgColorPrevalence, "URLs extracted."
