@@ -22,13 +22,6 @@ func main() {
 	fmt.Println(status)
 	imgColorPrevalence, status := extractURLs("input.txt")
 
-	_, ok := imgColorPrevalence["http://i.imgur.com/FApqk3D.jpg"]
-	if !ok {
-		fmt.Println("Key not found.")
-	} else {
-		fmt.Println("Key found.")
-	}
-
 	fmt.Println(status)
 }
 
@@ -81,10 +74,6 @@ the sample in half to find where the pixels would be the same.
 5. Create a struct to hold RGB values.
 	type RGB struct {R int, G int, B int}
 */
-
-/*
-
- */
 
 func csvSetup(filename string) string {
 
