@@ -1,3 +1,6 @@
+// Package errorlogging provides a clean function to allow for error
+// checking throughout the module instead of the if err != nil
+// pattern.
 package errorlogging
 
 import (
