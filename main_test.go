@@ -26,5 +26,18 @@ func TestCsvSetup(t *testing.T) {
 }
 
 func TestExtractURLs(t *testing.T) {
+	// Test first, middle, and last values for expected results
+	expected := []string{
+		"http://i.imgur.com/FApqk3D.jpg",
+		"http://i.imgur.com/TKLs9lo.jpg",
+		"https://i.redd.it/lsuw4p2ncyny.jpg",
+	}
+	got, _ := extractURLs("input.txt")
 
+	for _, url := range expected {
+		_, ok := got[url]
+		if !ok {
+			t.Logf("URL not present in imgColorPrevalence map: %v", url)
+		}
+	}
 }
