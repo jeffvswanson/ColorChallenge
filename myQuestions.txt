@@ -43,3 +43,6 @@ Q: Do the urls have to stay in the same order of appearance in the CSV file as
 the input.txt?
 
 Q: What access do I have to code reviews?
+
+Q: While Go is supposed to be backwards compatible, there are minor differences
+in versions, what version of Go will this be tested on?
