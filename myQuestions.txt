@@ -1,0 +1,45 @@
+Q: What's the turnaround time for the challenge?
+A: Turnaround time is completely up to you. We know you have a life and a job
+and other things going on so there's no time limit on getting this back to us.
+
+Q: Does this have to be pure Go or ar supporting libraries allowed? That is,
+if I feel the csv or net/http packages are useful may I import them?
+A: Yes, you're welcome to approach the challenge in whichever way you think is
+best. So if you think supporting libraries will help your solution, you're 
+welcome to use them.
+
+Q: How many threads does the CPU possess?
+A: I'll have to double check this and get back to you tomorrow. I do know we're
+purposely vague here though because we want to see how you approach the
+problem.
+
+Q: I like test files, would you want those along with the solution files? For
+example, if I make an image with four colors and run a test on it do you want
+both the Go test file and the supporting image(s) in the Git repository?
+A: We love tests so a test file in the repo would be great.
+
+Q: For error reporting, would you prefer logs or prints to standard output?
+A: We're purposely vague about error reporting too because we want to see how
+you handle them.
+
+Q: Also, do you wnat the program to complete what is can or fail early if 
+necessary? For example, if an image at a URL is no longer valid do you want the
+other processed with a note at the appropriate location in the output file
+saying the image was not available.
+A: I probably sound like a broken record at this point but this is another 
+purposely vague moment on our part.
+
+Q: What questions should I ask that I missed?
+A: You seem to be thinking about the problem the same way we do. One think we
+look for specifically is concurrency, simplicity, and efficiency.
+
+Q: Are they interested in the whole image, that is, including background color, 
+or do we want the dominant focus of the image?
+
+Q: The requirement is for the three most prevalent colors, do they have to be 
+in any sort of order or just list the three color hexadecimal color codes?
+
+Q: Do the urls have to stay in the same order of appearance in the CSV file as 
+the input.txt?
+
+Q: What access do I have to code reviews?
