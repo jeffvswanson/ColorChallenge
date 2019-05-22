@@ -1,3 +1,5 @@
+// Package exporttocsv provides functions to create and append to CSV
+// files.
 package exporttocsv
 
 import (
