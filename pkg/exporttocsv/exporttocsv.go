@@ -1,10 +1,11 @@
 package exporttocsv
 
 import (
-	"colorchallenge/pkg/errorlogging"
 	"encoding/csv"
 	"fmt"
 	"os"
+
+	"github.com/jeffvswanson/colorchallenge/pkg/errorlogging"
 )
 
 // Export serves as a wrapper to append a record to the given CSV file.

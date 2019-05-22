@@ -2,10 +2,12 @@ package main
 
 import (
 	"bufio"
-	"colorchallenge/pkg/errorlogging"
-	"colorchallenge/pkg/exporttocsv"
 	"fmt"
 	"os"
+
+	"github.com/jeffvswanson/colorchallenge/pkg/exporttocsv"
+
+	"github.com/jeffvswanson/colorchallenge/pkg/errorlogging"
 )
 
 type rgb struct {
