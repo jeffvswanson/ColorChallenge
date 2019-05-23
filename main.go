@@ -3,30 +3,67 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"image/jpeg"
+	"net/http"
 	"os"
 
 	"github.com/jeffvswanson/colorchallenge/pkg/exporttocsv"
 
-	"github.com/jeffvswanson/colorchallenge/pkg/errorlogging"
+	log "github.com/jeffvswanson/colorchallenge/pkg/errorlogging"
 )
 
 type colorCode struct {
 	Red, Green, Blue int
 }
 
+type logInfo struct {
+	Level, Message string
+	ErrorMessage   error
+}
+
 func init() {
-	FormatLog()
+	log.FormatLog()
 }
 
 func main() {
 
-	status := "Beginning setup."
-	fmt.Println(status)
-	status = csvSetup("ColorChallengeOutput")
-	fmt.Println(status)
-	imgColorPrevalence, status := extractURLs("input.txt")
+	// Setup
+	status := logInfo{
+		Level:   "Info",
+		Message: "Beginning setup.",
+	}
+	log.WriteToLog(status.Level, status.Message, nil)
 
-	fmt.Println(status)
+	// CSV file setup
+	status = logInfo{
+		Level:   "Info",
+		Message: csvSetup("ColorChallengeOutput"),
+	}
+	log.WriteToLog(status.Level, status.Message, nil)
+
+	imgColorPrevalence, message := extractURLs("input.txt")
+	status = logInfo{
+		Level:   "Info",
+		Message: message,
+	}
+	log.WriteToLog(status.Level, status.Message, nil)
+
+	var keyCount int
+	for key := range imgColorPrevalence {
+		keyCount++
+		resp, err := http.Get(key)
+		if log.ErrorCheck("Warn", fmt.Sprintf("http.Get(%v) failure", key), err) {
+			continue
+		}
+		defer resp.Body.Close()
+		imgData, err := jpeg.DecodeConfig(resp.Body)
+		if log.ErrorCheck("Warn", fmt.Sprintf("%v image decode error", key), err) {
+			continue
+		}
+		fmt.Printf("URL %d: %v\n\tH: %d, W: %d\n", keyCount, key, imgData.Height, imgData.Width)
+		// xDim := imgData.Width
+		// yDim := imgData.Height
+	}
 }
 
 // Start with the end in mind.
@@ -55,15 +92,6 @@ func main() {
 // Setup function to initialize log file and csv file to write to.
 
 /*
-Q: Are they interested in the whole image, that is, including background color, or do we want the dominant focus of the image?
-
-Q: The requirement is for the three most prevalent colors, do they have to be in any sort of order or just list the three color
-hexadecimal color codes?
-
-Q: Do the urls have to stay in the same order of appearance in the CSV file as the input.txt?
-*/
-
-/*
 Ideas:
 
 1. Make sections of the code supporting packages. For example, not all the code needs to be in one main file. The CSV handler could be a package and called into main.
@@ -75,8 +103,15 @@ Ideas:
 4. Take a wide sample, say 1000 pixels apart. If the pixels are the same value assume all pixels have the same value in between. If not, cut
 the sample in half to find where the pixels would be the same.
 
-5. Create a struct to hold RGB values.
-	type RGB struct {R int, G int, B int}
+5. Benchmark how running different numbers of goroutines would affect performance.
+	Should the goroutine start after the URLs get extracted or part of the
+	extraction process?
+	a. Launch a goroutine for each URL
+	b. Launch a goroutine for every 10 URLs
+	c. Launch a goroutine for every 100 URLs
+	d. Launch a goroutine for every 1000 URLs
+
+6. Once program runs dockerize it.
 */
 
 func csvSetup(filename string) string {
@@ -94,19 +129,19 @@ func extractURLs(filename string) (map[string]map[colorCode]int, string) {
 	// URL extracted?
 
 	f, err := os.Open(filename)
-	errorlogging.ErrorCheck("URL extraction failed during setup.", err)
+	log.ErrorCheck("Fatal", "URL extraction failed during setup.", err)
 	defer f.Close()
 
 	// Continue to think on data structure
 	// URL is the key
 	// URL represents an image with RGB color codes
 	// Color codes are a key
-	// The number of times a color code appears
+	// The number of times a color code appears is the value
 	imgColorPrevalence := make(map[string]map[colorCode]int)
 
 	scanner := bufio.NewScanner(f)
-	scanner.Split(bufio.ScanLines)
 
+	// Default behavior is to scan line-by-line
 	for scanner.Scan() {
 		imgColorPrevalence[scanner.Text()] = make(map[colorCode]int)
 	}
