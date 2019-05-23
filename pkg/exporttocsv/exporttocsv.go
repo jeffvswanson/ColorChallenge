@@ -18,12 +18,12 @@ func Export(filename string, record []string) error {
 	}
 
 	f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	errorlogging.ErrorCheck("Could not open CSV file:", err)
+	errorlogging.ErrorCheck("Fatal", "Could not open CSV file:", err)
 	defer f.Close()
 
 	w := csv.NewWriter(f)
 	err = w.Write(record)
-	errorlogging.ErrorCheck("Could not write to CSV file:", err)
+	errorlogging.ErrorCheck("Fatal", "Could not write to CSV file:", err)
 	w.Flush()
 
 	return err
@@ -34,7 +34,7 @@ func CreateCSV(filename string) string {
 
 	filename = fmt.Sprintf("%v.csv", filename)
 	f, err := os.Create(filename)
-	errorlogging.ErrorCheck("Could not create CSV file:", err)
+	errorlogging.ErrorCheck("Fatal", "Could not create CSV file:", err)
 	defer f.Close()
 
 	return f.Name()

@@ -14,6 +14,10 @@ type colorCode struct {
 	Red, Green, Blue int
 }
 
+func init() {
+	FormatLog()
+}
+
 func main() {
 
 	status := "Beginning setup."
