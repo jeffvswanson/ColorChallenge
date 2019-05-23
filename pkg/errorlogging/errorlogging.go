@@ -4,25 +4,58 @@
 package errorlogging
 
 import (
-	"log"
+	"fmt"
+	"os"
+	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
+// FormatLog sets up the logging format.
+func FormatLog() {
+	Formatter := new(logrus.TextFormatter)
+	Formatter.TimestampFormat = "2006-01-02 15:04:05.0000"
+	Formatter.FullTimestamp = true
+	logrus.SetFormatter(Formatter)
+}
+
 // ErrorCheck writes an error message and the error to a log.
-func ErrorCheck(message string, err error) {
+func ErrorCheck(level, message string, err error) {
 	if err != nil {
-		log.Println(message, err)
+		writeToLog(level, message, err)
 	}
 }
 
-/*
-TODO: Implement logging such that the errors are written to an output file.
+func writeToLog(level, message string, reportedErr error) {
+	filename := createLogfileName()
+	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	FormatLog()
+	if err != nil {
+		// Cannot open log file, defaulting to stderr.
+		fmt.Println(err)
+	} else {
+		logrus.SetOutput(f)
+	}
 
-The output file goes into a directory:
-	logs/
-		YYYY/
-			MM-Month/
-				YYYYMMMDD.log
+	logMessage := fmt.Sprintf("%v - %v", message, reportedErr)
+	switch level {
+	case "Trace":
+		logrus.Trace(logMessage)
+	case "Debug":
+		logrus.Debug(logMessage)
+	case "Info":
+		logrus.Info(logMessage)
+	case "Warn":
+		logrus.Warn(logMessage)
+	case "Error":
+		logrus.Error(logMessage)
+	case "Fatal":
+		logrus.Fatal(logMessage)
+	case "Panic":
+		logrus.Panic(logMessage)
+	}
+}
 
-Format of log entry:
-	Prefix = YYYY-MM-DD HH:MM:SS,ms UTC - package name - ErrorLevel - message
-*/
+func createLogfileName() string {
+	return fmt.Sprintf("%v.log", time.Now().Format("20060102"))
+}
