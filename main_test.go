@@ -33,14 +33,14 @@ func TestExtractURLs(t *testing.T) {
 		"https://i.redd.it/lsuw4p2ncyny.jpg",
 	}
 	got, _ := extractURLs("input.txt")
-
 	for _, url := range expected {
 		_, ok := got[url]
 		if !ok {
 			t.Errorf("URL not present in imgColorPrevalence map: %v", url)
 		}
 	}
-	expectedLength := 1000
+	// The given URL list repeats after 40 URLs
+	expectedLength := 40
 	gotLength := len(got)
 	if gotLength != expectedLength {
 		t.Errorf("Error extracting URLs. Expected %d URLs, Got %d", expectedLength, gotLength)
