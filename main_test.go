@@ -40,4 +40,9 @@ func TestExtractURLs(t *testing.T) {
 			t.Logf("URL not present in imgColorPrevalence map: %v", url)
 		}
 	}
+	expectedLength := 1000
+	gotLength := len(got)
+	if gotLength != expectedLength {
+		t.Logf("Not all URLs extracted. Expected: %d URLs, Got %d", expectedLength, gotLength)
+	}
 }
