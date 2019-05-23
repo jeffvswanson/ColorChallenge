@@ -12,6 +12,7 @@ func TestCsvSetup(t *testing.T) {
 	if got != expected {
 		t.Errorf("csvSetup file name error. Expected: %v, Got: %v", expected, got)
 	}
+
 	f, _ := os.Open("TestCSV.csv")
 	defer os.Remove("TestCSV.csv")
 	defer f.Close()
