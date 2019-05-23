@@ -43,6 +43,6 @@ func TestExtractURLs(t *testing.T) {
 	expectedLength := 1000
 	gotLength := len(got)
 	if gotLength != expectedLength {
-		t.Errorf("Error extracting URLs. Expected: %d URLs, Got %d", expectedLength, gotLength)
+		t.Errorf("Error extracting URLs. Expected %d URLs, Got %d", expectedLength, gotLength)
 	}
 }
