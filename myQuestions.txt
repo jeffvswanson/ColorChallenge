@@ -46,3 +46,7 @@ Q: What access do I have to code reviews?
 
 Q: While Go is supposed to be backwards compatible, there are minor differences
 in versions, what version of Go will this be tested on?
+
+Q: How does Pex complete a project?
+
+Q: What's the structure of the Pex Engineering Team I would be working on?
