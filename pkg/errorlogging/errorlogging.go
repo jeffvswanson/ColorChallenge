@@ -20,13 +20,18 @@ func FormatLog() {
 }
 
 // ErrorCheck writes an error message and the error to a log.
-func ErrorCheck(level, message string, err error) {
+func ErrorCheck(level, message string, err error) bool {
+
+	var isError bool
 	if err != nil {
-		writeToLog(level, message, err)
+		WriteToLog(level, message, err)
+		isError = true
 	}
+	return isError
 }
 
-func writeToLog(level, message string, reportedErr error) {
+// WriteToLog writes messages to a log.
+func WriteToLog(level, message string, reportedErr error) {
 	filename := createLogfileName()
 	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	FormatLog()

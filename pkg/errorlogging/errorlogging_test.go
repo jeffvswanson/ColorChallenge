@@ -68,7 +68,7 @@ func TestWriteToLog(t *testing.T) {
 		if tt.Level == "Panic" {
 			defer func() { recover() }()
 		}
-		writeToLog(tt.Level, tt.Message, tt.TestErr)
+		WriteToLog(tt.Level, tt.Message, tt.TestErr)
 		// Check if appropriately named logfile exists.
 		filename := fmt.Sprintf("%v.log", time.Now().Format("20060102"))
 		f, err := os.Open(filename)
