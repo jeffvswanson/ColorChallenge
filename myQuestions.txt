@@ -43,6 +43,7 @@ Q: Do the urls have to stay in the same order of appearance in the CSV file as
 the input.txt?
 
 Q: What access do I have to code reviews?
+A: End of the project.
 
 Q: While Go is supposed to be backwards compatible, there are minor differences
 in versions, what version of Go will this be tested on?
@@ -50,3 +51,5 @@ in versions, what version of Go will this be tested on?
 Q: How does Pex complete a project?
 
 Q: What's the structure of the Pex Engineering Team I would be working on?
+
+Q: How does Pex handle its distributed teams for collaboration?
