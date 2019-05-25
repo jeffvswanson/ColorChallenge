@@ -35,18 +35,25 @@ look for specifically is concurrency, simplicity, and efficiency.
 
 Q: Are they interested in the whole image, that is, including background color, 
 or do we want the dominant focus of the image?
+A: Regarding the image, this is purposely very vague again because we're most
+interested in how you approach this.
 
 Q: The requirement is for the three most prevalent colors, do they have to be 
 in any sort of order or just list the three color hexadecimal color codes?
+A: Color order doesn't matter.
 
 Q: Do the urls have to stay in the same order of appearance in the CSV file as 
 the input.txt?
+A: The order of the URLs is also up to you, we're not testing for that so much
+as we are testing for error handling, concurrency, etc.
 
 Q: What access do I have to code reviews?
 A: End of the project.
 
 Q: While Go is supposed to be backwards compatible, there are minor differences
 in versions, what version of Go will this be tested on?
+A: We use 1.12 version, but feel free to use whatever verrsion you're 
+comfortable with.
 
 Q: How does Pex complete a project?
 
