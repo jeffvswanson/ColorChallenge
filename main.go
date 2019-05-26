@@ -3,7 +3,9 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"image/jpeg"
+	"image"
+	_ "image/jpeg"
+	_ "image/png"
 	"net/http"
 	"os"
 
@@ -13,7 +15,7 @@ import (
 )
 
 type colorCode struct {
-	Red, Green, Blue int
+	Red, Green, Blue uint8
 }
 
 type logInfo struct {
@@ -51,12 +53,14 @@ func main() {
 	var keyCount int
 	for key := range imgColorPrevalence {
 		keyCount++
+		// Get the image
 		resp, err := http.Get(key)
-		if log.ErrorCheck("Warn", fmt.Sprintf("http.Get(%v) failure", key), err) {
+		if log.ErrorCheck("Warn", "http.Get failure", err) {
 			continue
 		}
 		defer resp.Body.Close()
-		imgData, err := jpeg.DecodeConfig(resp.Body)
+		// Find the image information
+		imgData, _, err := image.DecodeConfig(resp.Body)
 		if log.ErrorCheck("Warn", fmt.Sprintf("%v image decode error", key), err) {
 			continue
 		}
@@ -112,6 +116,18 @@ the sample in half to find where the pixels would be the same.
 	d. Launch a goroutine for every 1000 URLs
 
 6. Once program runs dockerize it.
+
+7. Have pointers to the errors passed to errorlogging.
+*/
+
+/*
+Errors encountered:
+
+1. "Get https://i.redd.it/fyqzavufvjwy.jpg: dial tcp: lookup i.redd.it: no such host"
+Approach: This is a fatal error if it's more than a few. It means there's no data connection.
+
+2. "invalid JPEG format: missing SOI marker"
+Approach:
 */
 
 func csvSetup(filename string) string {
