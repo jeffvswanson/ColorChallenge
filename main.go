@@ -15,7 +15,7 @@ import (
 )
 
 type colorCode struct {
-	Red, Green, Blue uint8
+	Red, Green, Blue uint32
 }
 
 type logInfo struct {
@@ -50,24 +50,38 @@ func main() {
 	}
 	log.WriteToLog(status.Level, status.Message, nil)
 
-	var keyCount int
-	for key := range imgColorPrevalence {
-		keyCount++
+	var urlCount int
+	for url := range imgColorPrevalence {
+		urlCount++
 		// Get the image
-		resp, err := http.Get(key)
+		resp, err := http.Get(url)
 		if log.ErrorCheck("Warn", "http.Get failure", err) {
 			continue
 		}
 		defer resp.Body.Close()
 		// Find the image information
-		imgData, _, err := image.DecodeConfig(resp.Body)
-		if log.ErrorCheck("Warn", fmt.Sprintf("%v image decode error", key), err) {
+		imgData, _, err := image.Decode(resp.Body)
+		if log.ErrorCheck("Warn", fmt.Sprintf("%v image decode error", url), err) {
 			continue
 		}
-		fmt.Printf("URL %d: %v\n\tH: %d, W: %d\n", keyCount, key, imgData.Height, imgData.Width)
-		// xDim := imgData.Width
-		// yDim := imgData.Height
+		fmt.Printf("URL %d: %v\n", urlCount, url)
+		fmt.Printf("\tTop left pixel value: %v\n", imgData.At(imgData.Bounds().Min.X, imgData.Bounds().Min.Y))
+		fmt.Printf("\tBottom right pixel value: %v\n", imgData.At(imgData.Bounds().Max.X-1, imgData.Bounds().Max.Y-1))
+		// Find pixel color mapping
+		timesAppeared := make(map[colorCode]int)
+		for y := imgData.Bounds().Min.Y; y < imgData.Bounds().Max.Y; y++ {
+			for x := imgData.Bounds().Min.X; x < imgData.Bounds().Max.X; x++ {
+				r, g, b, _ := imgData.At(x, y).RGBA()
+				timesAppeared[colorCode{r, g, b}]++
+				imgColorPrevalence[url] = timesAppeared
+			}
+		}
+		for code, v := range timesAppeared {
+			fmt.Printf("\tcode %6v appeared %d times.\n", code, v)
+		}
 	}
+	// Sort for the top three colors
+	// Bring in package sort
 }
 
 // Start with the end in mind.
@@ -125,9 +139,6 @@ Errors encountered:
 
 1. "Get https://i.redd.it/fyqzavufvjwy.jpg: dial tcp: lookup i.redd.it: no such host"
 Approach: This is a fatal error if it's more than a few. It means there's no data connection.
-
-2. "invalid JPEG format: missing SOI marker"
-Approach:
 */
 
 func csvSetup(filename string) string {
