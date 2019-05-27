@@ -8,6 +8,7 @@ import (
 	_ "image/png"
 	"net/http"
 	"os"
+	"sort"
 
 	"github.com/jeffvswanson/colorchallenge/pkg/exporttocsv"
 
@@ -65,8 +66,6 @@ func main() {
 			continue
 		}
 		fmt.Printf("URL %d: %v\n", urlCount, url)
-		fmt.Printf("\tTop left pixel value: %v\n", imgData.At(imgData.Bounds().Min.X, imgData.Bounds().Min.Y))
-		fmt.Printf("\tBottom right pixel value: %v\n", imgData.At(imgData.Bounds().Max.X-1, imgData.Bounds().Max.Y-1))
 		// Find pixel color mapping
 		timesAppeared := make(map[colorCode]int)
 		for y := imgData.Bounds().Min.Y; y < imgData.Bounds().Max.Y; y++ {
@@ -76,12 +75,31 @@ func main() {
 				imgColorPrevalence[url] = timesAppeared
 			}
 		}
-		for code, v := range timesAppeared {
-			fmt.Printf("\tcode %6v appeared %d times.\n", code, v)
+
+		// Sort for the image's top three colors and print them to output
+
+		// Struct to extract colorCode, key, and times it appeared, value, from the map.
+		// Only stable for Go 1.8 and higher
+		type kv struct {
+			Key   colorCode
+			Value int
 		}
+
+		var sortAppearances []kv
+
+		for color, appeared := range timesAppeared {
+			sortAppearances = append(sortAppearances, kv{color, appeared})
+		}
+		sort.Slice(sortAppearances, func(i, j int) bool {
+			return sortAppearances[i].Value > sortAppearances[j].Value
+		})
+
+		for kv := 0; kv < 3; kv++ {
+			fmt.Printf("Top Color%d - %v, %d\n", kv+1, sortAppearances[kv].Key, sortAppearances[kv].Value)
+		}
+		// Convert the color codes to hexadecimal color codes
+		// Print to the output CSV
 	}
-	// Sort for the top three colors
-	// Bring in package sort
 }
 
 // Start with the end in mind.
@@ -132,6 +150,8 @@ the sample in half to find where the pixels would be the same.
 6. Once program runs dockerize it.
 
 7. Have pointers to the errors passed to errorlogging.
+
+8. Create data structure other than map to support color mapping
 */
 
 /*
