@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"image"
+	"image/color"
 	_ "image/jpeg"
 	_ "image/png"
 	"net/http"
@@ -16,7 +17,7 @@ import (
 )
 
 type colorCode struct {
-	Red, Green, Blue uint32
+	Red, Green, Blue uint8
 }
 
 type logInfo struct {
@@ -44,6 +45,7 @@ func main() {
 	}
 	log.WriteToLog(status.Level, status.Message, nil)
 
+	// Grab the URLs to parse
 	imgColorPrevalence, message := extractURLs("input.txt")
 	status = logInfo{
 		Level:   "Info",
@@ -51,6 +53,7 @@ func main() {
 	}
 	log.WriteToLog(status.Level, status.Message, nil)
 
+	// Parse the URLs for their images
 	var urlCount int
 	for url := range imgColorPrevalence {
 		urlCount++
@@ -65,26 +68,45 @@ func main() {
 		if log.ErrorCheck("Warn", fmt.Sprintf("%v image decode error", url), err) {
 			continue
 		}
+
 		fmt.Printf("URL %d: %v\n", urlCount, url)
 		// Find pixel color mapping
 		timesAppeared := make(map[colorCode]int)
+
+		// Save for attempt to make the image NRGBA instead of doing a conversion on every pixel.
+		// imgData returns in YCbCr format, need to convert to RGB 8-bit
+		// imgRectangle := imgData.Bounds()
+		// fmt.Printf("\timgRectangle value - %v", imgRectangle)
+		// fmt.Printf("\timgRectangle type - %T\n", imgRectangle)
+		// nrgba := image.NewNRGBA(imgRectangle)
+		// fmt.Printf("\tnrgba type - %T\n", nrgba)
+		// for y := nrgba.Bounds().Min.Y; y < nrgba.Bounds().Max.Y; y++ {
+		// 	for x := nrgba.Bounds().Min.X; x < nrgba.Bounds().Max.X; x++ {
+		// 		fmt.Printf("\tNRGBA return: %v - Type: %T\n", nrgba.At(x, y), nrgba.At(x, y))
+		// 	}
+		// }
+
+		// imgData returns in YCbCr format, need to convert to RGB 8-bit
 		for y := imgData.Bounds().Min.Y; y < imgData.Bounds().Max.Y; y++ {
 			for x := imgData.Bounds().Min.X; x < imgData.Bounds().Max.X; x++ {
-				r, g, b, _ := imgData.At(x, y).RGBA()
-				timesAppeared[colorCode{r, g, b}]++
+				// imgData returns in YCbCr format, need to convert to RGB 8-bit
+				rgb := color.NRGBAModel.Convert(imgData.At(x, y)).(color.NRGBA)
+				timesAppeared[colorCode{rgb.R, rgb.G, rgb.B}]++
 				imgColorPrevalence[url] = timesAppeared
 			}
 		}
 
 		// Sort for the image's top three colors and print them to output
 
-		// Struct to extract colorCode, key, and times it appeared, value, from the map.
+		// Struct to extract colorCode, key, and times it appeared, value,
+		// from the map.
 		// Only stable for Go 1.8 and higher
 		type kv struct {
 			Key   colorCode
 			Value int
 		}
 
+		// Sort the colors from largest to smallest
 		var sortAppearances []kv
 
 		for color, appeared := range timesAppeared {
@@ -93,13 +115,22 @@ func main() {
 		sort.Slice(sortAppearances, func(i, j int) bool {
 			return sortAppearances[i].Value > sortAppearances[j].Value
 		})
-
-		for kv := 0; kv < 3; kv++ {
-			fmt.Printf("Top Color%d - %v, %d\n", kv+1, sortAppearances[kv].Key, sortAppearances[kv].Value)
+		// Extract the top 3 colors
+		// Convert the color codes to hexadecimal color codes, #000000 - #FFFFFF
+		outputSlice := make([]string, 4)
+		outputSlice[0] = url
+		for i := 0; i < 3; i++ {
+			hexColor := fmt.Sprintf("#%.2X%.2X%.2X", sortAppearances[i].Key.Red,
+				sortAppearances[i].Key.Green, sortAppearances[i].Key.Blue)
+			outputSlice[i+1] = hexColor
 		}
-		// Convert the color codes to hexadecimal color codes
+
 		// Print to the output CSV
+		exporttocsv.Export("ColorChallengeOutput.csv", outputSlice)
 	}
+
+	// Process complete
+	log.WriteToLog("Info", "Process complete", nil)
 }
 
 // Start with the end in mind.
@@ -159,6 +190,7 @@ Errors encountered:
 
 1. "Get https://i.redd.it/fyqzavufvjwy.jpg: dial tcp: lookup i.redd.it: no such host"
 Approach: This is a fatal error if it's more than a few. It means there's no data connection.
+
 */
 
 func csvSetup(filename string) string {
