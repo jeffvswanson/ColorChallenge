@@ -9,6 +9,7 @@ import (
 	_ "image/png"
 	"net/http"
 	"os"
+	"runtime"
 	"sort"
 
 	"github.com/jeffvswanson/colorchallenge/pkg/exporttocsv"
@@ -26,6 +27,8 @@ type logInfo struct {
 }
 
 func init() {
+	// Specifically limited to 1 CPU
+	runtime.GOMAXPROCS(1)
 	log.FormatLog()
 }
 
@@ -54,9 +57,7 @@ func main() {
 	log.WriteToLog(status.Level, status.Message, nil)
 
 	// Parse the URLs for their images
-	var urlCount int
 	for url := range imgColorPrevalence {
-		urlCount++
 		// Get the image
 		resp, err := http.Get(url)
 		if log.ErrorCheck("Warn", "http.Get failure", err) {
@@ -69,7 +70,6 @@ func main() {
 			continue
 		}
 
-		fmt.Printf("URL %d: %v\n", urlCount, url)
 		// Find pixel color mapping
 		timesAppeared := make(map[colorCode]int)
 
