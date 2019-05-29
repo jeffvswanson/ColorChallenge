@@ -54,7 +54,10 @@ func TestWriteToLog(t *testing.T) {
 		{"Info", "Info Notification", errors.New("test info error")},
 		{"Warn", "Warning", errors.New("test warn error")},
 		{"Error", "Error! Error!", errors.New("test error")},
-		// Have not found a way to test around logrus call to os.Exit on fatal error.
+		// Have not found a way to test around logrus call to os.Exit on fatal
+		// error. The test returns correctly when run by exiting the program
+		// and printing the fatal error message, no other test will run,
+		// however, and the test will record as failed.
 		// {"Fatal", "Fatal Error!", errors.New("test fatal error")},
 		{"Panic", "Panic!", errors.New("test panic error")},
 	}
