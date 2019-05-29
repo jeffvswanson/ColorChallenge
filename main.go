@@ -39,7 +39,8 @@ func init() {
 
 func main() {
 
-	// Create variables for output and input files.
+	inputFilename := "input.txt"
+	outputFilename := "ColorChallengeOutput"
 
 	// Setup
 	status := logInfo{
@@ -51,14 +52,14 @@ func main() {
 	// CSV file setup
 	status = logInfo{
 		Level:   "Info",
-		Message: csvSetup("ColorChallengeOutput"),
+		Message: csvSetup(outputFilename),
 	}
 	log.WriteToLog(status.Level, status.Message, nil)
 
 	// Grab the URLs to parse
 	status = logInfo{
 		Level:   "Info",
-		Message: extractURLs("input.txt"),
+		Message: extractURLs(inputFilename, outputFilename),
 	}
 	log.WriteToLog(status.Level, status.Message, nil)
 }
@@ -72,9 +73,9 @@ func csvSetup(filename string) string {
 	return "CSV setup complete."
 }
 
-func extractURLs(filename string) string {
+func extractURLs(inFilename, outFilename string) string {
 
-	f, err := os.Open(filename)
+	f, err := os.Open(inFilename)
 	log.ErrorCheck("Fatal", "URL extraction failed during setup.", err)
 	defer f.Close()
 
@@ -86,7 +87,7 @@ func extractURLs(filename string) string {
 		// We're not interested in keeping the URL and color mapping in
 		// memory, just extracting the color mapping.
 		go getImageData(scanner.Text(), ch)
-		exporttocsv.Export("ColorChallengeOutput.csv", <-ch)
+		exporttocsv.Export(outFilename, <-ch)
 	}
 	return "Process complete."
 }
@@ -113,19 +114,6 @@ func countColors(img image.Image) []string {
 	// Find pixel color mapping
 	timesAppeared := make(map[colorCode]int)
 
-	// Save for attempt to make the image NRGBA instead of doing a conversion on every pixel.
-	// imgData returns in YCbCr format, need to convert to RGB 8-bit
-	// imgRectangle := imgData.Bounds()
-	// fmt.Printf("\timgRectangle value - %v", imgRectangle)
-	// fmt.Printf("\timgRectangle type - %T\n", imgRectangle)
-	// nrgba := image.NewNRGBA(imgRectangle)
-	// fmt.Printf("\tnrgba type - %T\n", nrgba)
-	// for y := nrgba.Bounds().Min.Y; y < nrgba.Bounds().Max.Y; y++ {
-	// 	for x := nrgba.Bounds().Min.X; x < nrgba.Bounds().Max.X; x++ {
-	// 		fmt.Printf("\tNRGBA return: %v - Type: %T\n", nrgba.At(x, y), nrgba.At(x, y))
-	// 	}
-	// }
-
 	for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
 		for x := img.Bounds().Min.X; x < img.Bounds().Max.X; x++ {
 			// imgData returns in YCbCr format, need to convert to RGB 8-bit
@@ -134,7 +122,7 @@ func countColors(img image.Image) []string {
 		}
 	}
 
-	// Sort for the image's top three colors and print them to output
+	// Sort colors in descending order.
 	output := sortColors(timesAppeared)
 
 	return output
@@ -145,7 +133,7 @@ func sortColors(timesAppeared map[colorCode]int) []string {
 	// from the map.
 	// Only stable for Go 1.8 and higher
 
-	// Sort the colors from largest to smallest
+	// Sort the colors from largest value to smallest value.
 	var sortAppearances []kv
 
 	for color, appeared := range timesAppeared {
@@ -230,4 +218,13 @@ Errors encountered:
 1. "Get https://i.redd.it/fyqzavufvjwy.jpg: dial tcp: lookup i.redd.it: no such host"
 Approach: This is a fatal error if it's more than a few. It means there's no data connection.
 
+*/
+
+/*
+Tasks 29 May 2019
+- Complete main_test.go coverage
+- Test benchmark
+- Branch using waitgroups instead of channels
+- Benchmark waitgroup results
+- Branch sampling every other pixel, compare to baseline
 */
