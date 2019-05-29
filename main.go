@@ -87,7 +87,7 @@ func extractURLs(inFilename, outFilename string) string {
 		// We're not interested in keeping the URL and color mapping in
 		// memory, just extracting the color mapping.
 		go getImageData(scanner.Text(), ch)
-		exporttocsv.Export(outFilename, <-ch)
+		exporttocsv.Export(fmt.Sprintf("%v.csv", outFilename), <-ch)
 	}
 	return "Process complete."
 }
@@ -222,7 +222,6 @@ Approach: This is a fatal error if it's more than a few. It means there's no dat
 
 /*
 Tasks 29 May 2019
-- Complete main_test.go coverage
 - Test benchmark
 - Branch using waitgroups instead of channels
 - Benchmark waitgroup results

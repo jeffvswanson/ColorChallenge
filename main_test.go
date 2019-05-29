@@ -33,7 +33,7 @@ func TestCsvSetup(t *testing.T) {
 
 func TestExtractURLs(t *testing.T) {
 	expected := "Process complete."
-	got := extractURLs("input_test.txt", "ColorChallengeOutput.csv")
+	got := extractURLs("input_test.txt", "ColorChallengeOutput")
 	if got != expected {
 		t.Errorf("URL extraction error. Expected: %v, Got: %v", expected, got)
 	}
@@ -137,4 +137,11 @@ func TestGetImageData(t *testing.T) {
 			t.Log("Expected an error string. Got an empty string.")
 		}
 	}
+}
+
+func BenchmarkExtractURLs(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		extractURLs("input_test.txt", "ColorChallengeOutput")
+	}
+	// Channel benchmark: 14133294000 ns/op	1590616752 B/op	198078710 allocs/op
 }
