@@ -21,6 +21,11 @@ type colorCode struct {
 	Red, Green, Blue uint8
 }
 
+type kv struct {
+	Key   colorCode
+	Value int
+}
+
 type logInfo struct {
 	Level, Message string
 	ErrorMessage   error
@@ -33,6 +38,8 @@ func init() {
 }
 
 func main() {
+
+	// Create variables for output and input files.
 
 	// Setup
 	status := logInfo{
@@ -49,88 +56,120 @@ func main() {
 	log.WriteToLog(status.Level, status.Message, nil)
 
 	// Grab the URLs to parse
-	imgColorPrevalence, message := extractURLs("input.txt")
 	status = logInfo{
 		Level:   "Info",
-		Message: message,
+		Message: extractURLs("input.txt"),
 	}
 	log.WriteToLog(status.Level, status.Message, nil)
+}
 
-	// Parse the URLs for their images
-	for url := range imgColorPrevalence {
-		// Get the image
-		resp, err := http.Get(url)
-		if log.ErrorCheck("Warn", "http.Get failure", err) {
-			continue
-		}
-		defer resp.Body.Close()
-		// Find the image information
-		imgData, _, err := image.Decode(resp.Body)
-		if log.ErrorCheck("Warn", fmt.Sprintf("%v image decode error", url), err) {
-			continue
-		}
+func csvSetup(filename string) string {
 
-		// Find pixel color mapping
-		timesAppeared := make(map[colorCode]int)
+	filename = exporttocsv.CreateCSV(filename)
+	headerRecord := []string{"URL", "top_color1", "top_color2", "top_color3"}
+	exporttocsv.Export(filename, headerRecord)
 
-		// Save for attempt to make the image NRGBA instead of doing a conversion on every pixel.
-		// imgData returns in YCbCr format, need to convert to RGB 8-bit
-		// imgRectangle := imgData.Bounds()
-		// fmt.Printf("\timgRectangle value - %v", imgRectangle)
-		// fmt.Printf("\timgRectangle type - %T\n", imgRectangle)
-		// nrgba := image.NewNRGBA(imgRectangle)
-		// fmt.Printf("\tnrgba type - %T\n", nrgba)
-		// for y := nrgba.Bounds().Min.Y; y < nrgba.Bounds().Max.Y; y++ {
-		// 	for x := nrgba.Bounds().Min.X; x < nrgba.Bounds().Max.X; x++ {
-		// 		fmt.Printf("\tNRGBA return: %v - Type: %T\n", nrgba.At(x, y), nrgba.At(x, y))
-		// 	}
-		// }
+	return "CSV setup complete."
+}
 
-		// imgData returns in YCbCr format, need to convert to RGB 8-bit
-		for y := imgData.Bounds().Min.Y; y < imgData.Bounds().Max.Y; y++ {
-			for x := imgData.Bounds().Min.X; x < imgData.Bounds().Max.X; x++ {
-				// imgData returns in YCbCr format, need to convert to RGB 8-bit
-				rgb := color.NRGBAModel.Convert(imgData.At(x, y)).(color.NRGBA)
-				timesAppeared[colorCode{rgb.R, rgb.G, rgb.B}]++
-				imgColorPrevalence[url] = timesAppeared
-			}
-		}
+func extractURLs(filename string) string {
 
-		// Sort for the image's top three colors and print them to output
+	f, err := os.Open(filename)
+	log.ErrorCheck("Fatal", "URL extraction failed during setup.", err)
+	defer f.Close()
 
-		// Struct to extract colorCode, key, and times it appeared, value,
-		// from the map.
-		// Only stable for Go 1.8 and higher
-		type kv struct {
-			Key   colorCode
-			Value int
-		}
+	scanner := bufio.NewScanner(f)
 
-		// Sort the colors from largest to smallest
-		var sortAppearances []kv
+	// Default behavior is to scan line-by-line
+	ch := make(chan []string)
+	for scanner.Scan() {
+		// We're not interested in keeping the URL and color mapping in
+		// memory, just extracting the color mapping.
+		go getImageData(scanner.Text(), ch)
+		exporttocsv.Export("ColorChallengeOutput.csv", <-ch)
+	}
+	return "Process complete."
+}
 
-		for color, appeared := range timesAppeared {
-			sortAppearances = append(sortAppearances, kv{color, appeared})
-		}
-		sort.Slice(sortAppearances, func(i, j int) bool {
-			return sortAppearances[i].Value > sortAppearances[j].Value
-		})
-		// Extract the top 3 colors
-		// Convert the color codes to hexadecimal color codes, #000000 - #FFFFFF
-		outputSlice := make([]string, 4)
-		outputSlice[0] = url
-		for i := 0; i < 3; i++ {
-			hexColor := fmt.Sprintf("#%.2X%.2X%.2X", sortAppearances[i].Key.Red,
-				sortAppearances[i].Key.Green, sortAppearances[i].Key.Blue)
-			outputSlice[i+1] = hexColor
-		}
-
-		// Print to the output CSV
-		exporttocsv.Export("ColorChallengeOutput.csv", outputSlice)
+func getImageData(url string, ch chan []string) {
+	resp, err := http.Get(url)
+	if log.ErrorCheck("Warn", "http.Get failure", err) {
+		return
+	}
+	defer resp.Body.Close()
+	// Extract the image information.
+	imgData, _, err := image.Decode(resp.Body)
+	if log.ErrorCheck("Warn", fmt.Sprintf("%v image decode error", url), err) {
+		return
 	}
 
-	// Process complete
-	log.WriteToLog("Info", "Process complete", nil)
+	// Get the output string into url,color,color,color format.
+	output := countColors(imgData)
+	output[0] = url
+	ch <- output
+}
+
+func countColors(img image.Image) []string {
+	// Find pixel color mapping
+	timesAppeared := make(map[colorCode]int)
+
+	// Save for attempt to make the image NRGBA instead of doing a conversion on every pixel.
+	// imgData returns in YCbCr format, need to convert to RGB 8-bit
+	// imgRectangle := imgData.Bounds()
+	// fmt.Printf("\timgRectangle value - %v", imgRectangle)
+	// fmt.Printf("\timgRectangle type - %T\n", imgRectangle)
+	// nrgba := image.NewNRGBA(imgRectangle)
+	// fmt.Printf("\tnrgba type - %T\n", nrgba)
+	// for y := nrgba.Bounds().Min.Y; y < nrgba.Bounds().Max.Y; y++ {
+	// 	for x := nrgba.Bounds().Min.X; x < nrgba.Bounds().Max.X; x++ {
+	// 		fmt.Printf("\tNRGBA return: %v - Type: %T\n", nrgba.At(x, y), nrgba.At(x, y))
+	// 	}
+	// }
+
+	for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
+		for x := img.Bounds().Min.X; x < img.Bounds().Max.X; x++ {
+			// imgData returns in YCbCr format, need to convert to RGB 8-bit
+			rgb := color.NRGBAModel.Convert(img.At(x, y)).(color.NRGBA)
+			timesAppeared[colorCode{rgb.R, rgb.G, rgb.B}]++
+		}
+	}
+
+	// Sort for the image's top three colors and print them to output
+	output := sortColors(timesAppeared)
+
+	return output
+}
+
+func sortColors(timesAppeared map[colorCode]int) []string {
+	// Struct to extract colorCode, key, and times it appeared, value,
+	// from the map.
+	// Only stable for Go 1.8 and higher
+
+	// Sort the colors from largest to smallest
+	var sortAppearances []kv
+
+	for color, appeared := range timesAppeared {
+		sortAppearances = append(sortAppearances, kv{color, appeared})
+	}
+	sort.Slice(sortAppearances, func(i, j int) bool {
+		return sortAppearances[i].Value > sortAppearances[j].Value
+	})
+
+	output := extractTopColors(sortAppearances)
+
+	return output
+}
+
+func extractTopColors(xColors []kv) []string {
+	// Extract the top 3 colors
+	topColors := make([]string, 4)
+	for i := 0; i < 3; i++ {
+		// Convert RGB color codes to hexadecimal, #000000 - #FFFFFF
+		hexColor := fmt.Sprintf("#%.2X%.2X%.2X", xColors[i].Key.Red,
+			xColors[i].Key.Green, xColors[i].Key.Blue)
+		topColors[i+1] = hexColor
+	}
+	return topColors
 }
 
 // Start with the end in mind.
@@ -192,38 +231,3 @@ Errors encountered:
 Approach: This is a fatal error if it's more than a few. It means there's no data connection.
 
 */
-
-func csvSetup(filename string) string {
-
-	filename = exporttocsv.CreateCSV(filename)
-	headerRecord := []string{"URL", "top_color1", "top_color2", "top_color3"}
-	exporttocsv.Export(filename, headerRecord)
-
-	return "CSV setup complete."
-}
-
-func extractURLs(filename string) (map[string]map[colorCode]int, string) {
-	// Think on this, should I do a batch extraction or have a go func deal
-	// with each individual URL with a pointer/counter to reference the last
-	// URL extracted?
-
-	f, err := os.Open(filename)
-	log.ErrorCheck("Fatal", "URL extraction failed during setup.", err)
-	defer f.Close()
-
-	// Continue to think on data structure
-	// URL is the key
-	// URL represents an image with RGB color codes
-	// Color codes are a key
-	// The number of times a color code appears is the value
-	imgColorPrevalence := make(map[string]map[colorCode]int)
-
-	scanner := bufio.NewScanner(f)
-
-	// Default behavior is to scan line-by-line
-	for scanner.Scan() {
-		imgColorPrevalence[scanner.Text()] = make(map[colorCode]int)
-	}
-
-	return imgColorPrevalence, "URLs extracted."
-}

@@ -27,23 +27,13 @@ func TestCsvSetup(t *testing.T) {
 }
 
 func TestExtractURLs(t *testing.T) {
-	// Test first, middle, and last values for expected results
-	expected := []string{
-		"http://i.imgur.com/FApqk3D.jpg",
-		"http://i.imgur.com/TKLs9lo.jpg",
-		"https://i.redd.it/lsuw4p2ncyny.jpg",
-	}
-	got, _ := extractURLs("input.txt")
-	for _, url := range expected {
-		_, ok := got[url]
-		if !ok {
-			t.Errorf("URL not present in imgColorPrevalence map: %v", url)
-		}
-	}
-	// The given URL list repeats after 40 URLs
-	expectedLength := 40
-	gotLength := len(got)
-	if gotLength != expectedLength {
-		t.Errorf("Error extracting URLs. Expected %d URLs, Got %d", expectedLength, gotLength)
+	expected := "Process complete."
+	got := extractURLs("input_test.txt")
+	if got != expected {
+		t.Errorf("URL extraction error. Expected: %v, Got: %v", expected, got)
 	}
 }
+
+// func TestExtractTopColors(t *testing.T) {
+
+// }
