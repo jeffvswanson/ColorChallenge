@@ -1,0 +1,9 @@
+*/pkg
+*.csv
+*.log
+*.txt
+!input.txt
+*test*
+*.md
+.dockerignore
+Dockerfile
