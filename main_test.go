@@ -144,4 +144,6 @@ func BenchmarkExtractURLs(b *testing.B) {
 		extractURLs("input_test.txt", "ColorChallengeOutput")
 	}
 	// Channel benchmark: 14133294000 ns/op	1590616752 B/op	198078710 allocs/op
+	// Mutex on map: 	  16588424800 ns/op	1592626208 B/op	198085264 allocs/op
+	// Channel on map:    After waiting five minutes, killed process
 }

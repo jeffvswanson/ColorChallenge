@@ -221,9 +221,6 @@ Approach: This is a fatal error if it's more than a few. It means there's no dat
 */
 
 /*
-Tasks 29 May 2019
-- Test benchmark
-- Branch using waitgroups instead of channels
-- Benchmark waitgroup results
-- Branch sampling every other pixel, compare to baseline
+Tasks 30 May 2019
+- Dockerize the application
 */
