@@ -1,13 +1,13 @@
 # ColorChallenge
 
-[Background](#background)
-[Use](#use)
-[Installation](#installation)
-[Unexplored Optimizations](#unexplored-optimizations)
-[Failed Optimizations](#failed-optimizations)
-[Contributing](#contributing)
-[Contact](#contact)
-[License](#license)
+[Background](#background)  
+[Use](#use)  
+[Installation](#installation)  
+[Unexplored Optimizations](#unexplored-optimizations)  
+[Failed Optimizations](#failed-optimizations)  
+[Contributing](#contributing)  
+[Contact](#contact)  
+[License](#license)  
 
 ## Background
 **Given:** A list of 1000 URLs leading to images.  
@@ -15,11 +15,11 @@
 **Constraints:**
 - Focus on speed and resources.
 - Solution should be able to handle input files with more than a billion URLs.
-- Limited resources, aka, 1 CPU and 512 MB RAM. Max out usage of resources.
+- Limited resources, aka, 1 CPU and 512 MB RAM. Max out usage of resources.  
 **Facts:**
 - No limit on the execution time.
 - Order of return of the URLs does not matter.
-- Order of the top 3 colors returned does not matter.
+- Order of the top 3 colors returned does not matter.  
 **Assumptions:**  
 - Solution will need to be deployed in a containerized environment.
 - There will always be at least 3 colors in the images.
@@ -37,7 +37,7 @@ Installation requires Go version 1.8 or higher and can be deployed to an individ
 To run the tests:
 1. Open a command line terminal
 2. Change directory to the location you cloned the colorchallenge repository.
-3. On the command line type: `go test ./...`. This will run all tests in the repository.
+3. On the command line type: `go test ./...` This will run all tests in the repository.
 
 ### Docker Container
 
