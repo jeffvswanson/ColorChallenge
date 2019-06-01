@@ -16,10 +16,12 @@
 - Focus on speed and resources.
 - Solution should be able to handle input files with more than a billion URLs.
 - Limited resources, aka, 1 CPU and 512 MB RAM. Max out usage of resources.  
+
 **Facts:**
 - No limit on the execution time.
 - Order of return of the URLs does not matter.
 - Order of the top 3 colors returned does not matter.  
+
 **Assumptions:**  
 - Solution will need to be deployed in a containerized environment.
 - There will always be at least 3 colors in the images.
