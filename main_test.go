@@ -39,6 +39,11 @@ func TestExtractURLs(t *testing.T) {
 	}
 }
 
+func TestExtractURLsBigInput(t *testing.T) {
+	// Test just checks if it can access an input file with 1 billion URLs
+	go extractURLs("big_input_test.txt", "ColorChallengeOutput")
+}
+
 func TestExtractTopColors(t *testing.T) {
 	xColorAppearance := []kv{
 		{colorCode{0, 0, 0}, 5},       // black
@@ -143,7 +148,9 @@ func BenchmarkExtractURLs(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		extractURLs("input_test.txt", "ColorChallengeOutput")
 	}
-	// Channel benchmark: 14133294000 ns/op	1590616752 B/op	198078710 allocs/op
-	// Mutex on map: 	  16588424800 ns/op	1592626208 B/op	198085264 allocs/op
-	// Channel on map:    After waiting five minutes, killed process
+	// Channel benchmark:	14133294000 ns/op	1590616752 B/op	198078710 allocs/op
+	// Mutex on map: 		16588424800 ns/op	1592626208 B/op	198085264 allocs/op
+	// Channel on map:    	After waiting five minutes, killed process
+	// Image conversion:  	68627798300 ns/op	6488996328 B/op	222952381 allocs/op
+	// Image conversion 2:  15187969200 ns/op	2037514560 B/op	198079323 allocs/op
 }
