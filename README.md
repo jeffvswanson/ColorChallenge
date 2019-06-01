@@ -15,7 +15,7 @@
 **Constraints:**
 - Focus on speed and resources.
 - Solution should be able to handle input files with more than a billion URLs.
-- Limited resources, aka, 1 CPU and 512 MB RAM. Max out usage of resources.  
+- Limited resources, for instance, 1 CPU and 512 MB RAM. Max out usage of resources.  
 
 **Facts:**
 - No limit on the execution time.
@@ -48,8 +48,8 @@ To run the tests:
 3. On the command line run: `docker build -t color-challenge .`
 4. Once the image has been built successfully you can run the container: `docker run -m 512m color-challenge` The option `-m` limits the maximum memory the container can use.
 5. The generated container will exit when the process completes. You can check how the container is performing while running by opening another command line terminal and running: `docker container inspect container_name` where `container_name` can be found by running `docker ps -a`
-6. To export the container'r files at any time: 
-   1. Change directories into where you want the container snapshot located
+6. To export the container's files at any time: 
+   1. Change directories into where you want the container snapshot located.
    2. Give the command `docker export container_name > contents.tar`
    3. The `.tar` file can be unzipped with Linux tools or Windows 7zip. 
 
@@ -61,18 +61,18 @@ To run the tests:
 
 ## Future Optimizations
 1. Implement a data structure that does not require mapping, but still gives constant time lookup on average. I think this could be the biggest savings given the CPU profile map.
-2. Have a pre-built slice associated with each possible combination of the RGB values (16,974,593 or 8<sup>3</sup>), but consider will need an in-memory object of about 68 MB since each int allocated 4 bytes. Increment each index when the RGB value is found O(1), search for the top 3 values in the slice when done with image O(n). Do not sort! Indices indicate RGB value. Copy the top 3 to a new slice to release the searching slice and proceed.
+2. Have a pre-built slice associated with each possible combination of the RGB values (16,974,593 or 8<sup>3</sup>), but consider, will need an in-memory object of about 68 MB since each int is allocated 4 bytes. Increment each index when the RGB value is found O(1), search for the top 3 values in the slice when done with image O(n). Do not sort! Indices indicate RGB value. Copy the top 3 to a new slice to release the searching slice and proceed.
 
 ## Failed Optimizations
 1. Use sync.Waitgroups instead of channels. sync.Waitgroups ended up taking longer during benchmarking. 14.6 sec versus 14.1 sec.
 2. Take a sample of 50% of the rows. Speed of operations reduced by about 43%, accuracy reduced from 100% to about 92.5%.
 3. After profiling the program a lot of time is being spent on map assignment. Unfortunately, when attempting to reduce reliance on map assignment in search of an alternative data structure, I essentially re-implemented a map.
-4. Have a set of rows fan-out as goroutines. Increased concurrency increased runtime due to increased communication requirements.
+4. Have a set of rows fan out as goroutines. Increased concurrency increased runtime due to increased communication requirements.
 5. Convert the image from YCbCr format to RGB without going pixel-by-pixel, then checking pixels. Increased runtime about 7% from pixel-by-pixel level conversion, 15.1 sec versus 14.1 sec.
 
 ## Contributing
 
-Pull requests are welcome. For major changes, that is; add a function, change output, etc.; please open an issue to discuss what you would like to change.
+Pull requests are welcome. For major changes, that is: add a function, change output, etc.; please open an issue to discuss what you would like to change.
 
 Update tests as appropriate.
 
