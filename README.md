@@ -10,18 +10,20 @@
 [License](#license)
 
 ## Background
-**Given:** A list of URLs leading to images.  
-**Find:** The three most prevalent colors in the RGB scheme in hexadecimal format (#000000 - #FFFFFF) in each image and write the result into a CSV file in a form url,color,color,color.  
+**Given:** A list of 1000 URLs leading to images.  
+**Find:** The 3 most prevalent colors in the RGB scheme in hexadecimal format (#000000 - #FFFFFF) in each image and write the result into a CSV file in a form url,color,color,color.  
 **Constraints:**
 - Focus on speed and resources.
 - Solution should be able to handle input files with more than a billion URLs.
-- Limited resources, aka, 1 CPU and 512 MB RAM.
+- Limited resources, aka, 1 CPU and 512 MB RAM. Max out usage of resources.
 **Facts:**
 - No limit on the execution time.
 - Order of return of the URLs does not matter.
 - Order of the top 3 colors returned does not matter.
 **Assumptions:**  
 - Solution will need to be deployed in a containerized environment.
+- There will always be at least 3 colors in the images.
+- While there are only 40 websites repeated in the given list, assume production list will all be unique websites so treat repeated URLs as unique websites.
 
 ## Use
 This program takes the URLs from the input.txt file and produces a CSV in the format of url,color,color,color.  
@@ -57,13 +59,14 @@ To run the tests:
 
 ## Future Optimizations
 1. Implement a data structure that does not require mapping, but still gives constant time lookup on average. I think this could be the biggest savings given the CPU profile map.
-2. Have a pre-built slice associated with each possible combination of the RGB values (16,974,593 or 8<sup>3</sup>) . Increment each index when the RGB value is found O(1), search for the top 3 values in the slice when done with image. Do not sort! Indices indicate RGB value. Copy the top 3 to a new slice to release the searching slice and proceed.
+2. Have a pre-built slice associated with each possible combination of the RGB values (16,974,593 or 8<sup>3</sup>), but consider will need an in-memory object of about 68 MB since each int allocated 4 bytes. Increment each index when the RGB value is found O(1), search for the top 3 values in the slice when done with image O(n). Do not sort! Indices indicate RGB value. Copy the top 3 to a new slice to release the searching slice and proceed.
 
 ## Failed Optimizations
-1. Use sync.Waitgroups instead of channels. sync.Waitgroups ended up taking longer during benchmarking.
+1. Use sync.Waitgroups instead of channels. sync.Waitgroups ended up taking longer during benchmarking. 14.6 sec versus 14.1 sec.
 2. Take a sample of 50% of the rows. Speed of operations reduced by about 43%, accuracy reduced from 100% to about 92.5%.
 3. After profiling the program a lot of time is being spent on map assignment. Unfortunately, when attempting to reduce reliance on map assignment in search of an alternative data structure, I essentially re-implemented a map.
 4. Have a set of rows fan-out as goroutines. Increased concurrency increased runtime due to increased communication requirements.
+5. Convert the image from YCbCr format to RGB without going pixel-by-pixel, then checking pixels. Increased runtime about 7% from pixel-by-pixel level conversion, 15.1 sec versus 14.1 sec.
 
 ## Contributing
 
