@@ -39,11 +39,6 @@ func TestExtractURLs(t *testing.T) {
 	}
 }
 
-func TestExtractURLsBigInput(t *testing.T) {
-	// Test just checks if it can access an input file with 1 billion URLs
-	go extractURLs("big_input_test.txt", "ColorChallengeOutput")
-}
-
 func TestExtractTopColors(t *testing.T) {
 	xColorAppearance := []kv{
 		{colorCode{0, 0, 0}, 5},       // black
