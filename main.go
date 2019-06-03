@@ -11,6 +11,7 @@ import (
 	"os"
 	"runtime"
 	"sort"
+	"sync"
 
 	"github.com/jeffvswanson/colorchallenge/pkg/exporttocsv"
 
@@ -30,6 +31,8 @@ type logInfo struct {
 	Level, Message string
 	ErrorMessage   error
 }
+
+var wg sync.WaitGroup
 
 func init() {
 	// Specifically limited to 1 CPU
@@ -79,20 +82,34 @@ func extractURLs(inFilename, outFilename string) string {
 	log.ErrorCheck("Fatal", "URL extraction failed during setup.", err)
 	defer f.Close()
 
+	outFilename = fmt.Sprintf("%s.csv", outFilename)
+
 	scanner := bufio.NewScanner(f)
 
-	// Default behavior is to scan line-by-line
-	ch := make(chan []string)
-	for scanner.Scan() {
-		// We're not interested in keeping the URL and color mapping in
-		// memory, just extracting the color mapping.
-		go getImageData(scanner.Text(), ch)
-		exporttocsv.Export(fmt.Sprintf("%v.csv", outFilename), <-ch)
+	// Spawn workers to prevent running out of memory.
+	urlChan := make(chan string)
+	for i := 0; i < 6; i++ {
+		wg.Add(1)
+		go func() {
+			for url := range urlChan {
+				getImageData(url, outFilename)
+			}
+			wg.Done()
+		}()
 	}
+
+	for scanner.Scan() {
+		urlChan <- scanner.Text()
+	}
+	close(urlChan)
+
+	wg.Wait()
+
 	return "Process complete."
 }
 
-func getImageData(url string, ch chan []string) {
+func getImageData(url, csv string) {
+
 	resp, err := http.Get(url)
 	if log.ErrorCheck("Warn", "http.Get failure", err) {
 		return
@@ -106,7 +123,7 @@ func getImageData(url string, ch chan []string) {
 	// Get the output string into url,color,color,color format.
 	output := countColors(img)
 	output[0] = url
-	ch <- output
+	exporttocsv.Export(csv, output)
 }
 
 func countColors(img image.Image) []string {

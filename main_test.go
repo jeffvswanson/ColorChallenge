@@ -116,23 +116,17 @@ func TestCountColors(t *testing.T) {
 
 func TestGetImageData(t *testing.T) {
 	// Testing errorChecks only as happy path is covered by TestExtractURLs.
-	ch := make(chan []string)
-	var getImageTests = []struct {
-		URL      string
-		testChan chan []string
-	}{
-		// Not found error
-		{"https://malformedURL", ch},
-		// Incorrect file format
-		{"https://github.com/edent/SuperTinyIcons/blob/master/images/svg/stackoverflow.svg", ch},
+	getImageTests := []string{
+		"https://malformedURL",
+		"https://github.com/edent/SuperTinyIcons/blob/master/images/svg/stackoverflow.svg",
 	}
 
 	// Capture the log stream for testing
 	var buf bytes.Buffer
 	logrus.SetOutput(&buf)
 
-	for _, tt := range getImageTests {
-		getImageData(tt.URL, tt.testChan)
+	for _, url := range getImageTests {
+		getImageData(url, "ColorChallengeOutput.csv")
 		if buf.String() == "" {
 			t.Log("Expected an error string. Got an empty string.")
 		}
@@ -143,9 +137,4 @@ func BenchmarkExtractURLs(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		extractURLs("input_test.txt", "ColorChallengeOutput")
 	}
-	// Channel benchmark:	14133294000 ns/op	1590616752 B/op	198078710 allocs/op
-	// Mutex on map: 		16588424800 ns/op	1592626208 B/op	198085264 allocs/op
-	// Channel on map:    	After waiting five minutes, killed process
-	// Image conversion:  	68627798300 ns/op	6488996328 B/op	222952381 allocs/op
-	// Image conversion 2:  15187969200 ns/op	2037514560 B/op	198079323 allocs/op
 }
