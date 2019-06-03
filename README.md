@@ -47,7 +47,7 @@ To run the tests:
 2. Navigate to the downloaded repository.
 3. On the command line run: `docker build -t color-challenge .`
 4. Once the image has been built successfully you can run the container: `docker run -m 512m color-challenge` The option `-m` limits the maximum memory the container can use.
-5. The generated container will exit when the process completes. You can check how the container is performing while running by opening another command line terminal and running: `docker container inspect container_name` where `container_name` can be found by running `docker ps -a`
+5. The generated container will exit when the process completes. You can check how the container is performing while running by opening another command line terminal and running: `docker container stats container_name` where `container_name` can be found by running `docker ps -a`
 6. To export the container's files at any time: 
    1. Change directories into where you want the container snapshot located.
    2. Give the command `docker export container_name > contents.tar`
