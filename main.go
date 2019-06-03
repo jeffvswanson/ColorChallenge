@@ -88,7 +88,7 @@ func extractURLs(inFilename, outFilename string) string {
 
 	// Spawn workers to prevent running out of memory.
 	urlChan := make(chan string)
-	for i := 0; i < 6; i++ {
+	for i := 0; i < 7; i++ {
 		wg.Add(1)
 		go func() {
 			for url := range urlChan {
