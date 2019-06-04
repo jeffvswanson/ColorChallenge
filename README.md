@@ -3,7 +3,7 @@
 [Background](#background)  
 [Use](#use)  
 [Installation](#installation)  
-[Unexplored Optimizations](#unexplored-optimizations)  
+[Possible Optimizations](#future-optimizations)  
 [Failed Optimizations](#failed-optimizations)  
 [Contributing](#contributing)  
 [Contact](#contact)  
