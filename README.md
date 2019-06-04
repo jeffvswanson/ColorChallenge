@@ -60,7 +60,7 @@ To run the tests:
    2. `go build` will allow you to place the generated executable file into a new directory and have the resulting files in the new directory.
 
 ## Future Optimizations
-1. Implement a data structure that does not require mapping, but still gives constant time lookup on average. I think this could be the biggest savings given the CPU profile map.
+1. Implement a data structure that does not require mapping, but still gives constant time lookup on average. I think this could be the biggest savings given the CPU profile map.  
 ![Image of CPU Profile Time Dedicated to Mapping](map_hashing_time.png)
 2. Have a pre-built slice associated with each possible combination of the RGB values (16,974,593 or 8<sup>3</sup>), but consider, will need an in-memory object of about 68 MB since each int is allocated 4 bytes. Increment each index when the RGB value is found O(1), search for the top 3 values in the slice when done with image O(n). Do not sort! Indices indicate RGB value. Copy the top 3 to a new slice to release the searching slice and proceed.
 
