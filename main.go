@@ -33,15 +33,17 @@ type logInfo struct {
 }
 
 var wg sync.WaitGroup
+var logfile *os.File
 
 func init() {
 	// Specifically limited to 1 CPU
 	runtime.GOMAXPROCS(1)
-	log.FormatLog()
+	logfile = log.FormatLog()
 }
 
 func main() {
 
+	defer logfile.Close()
 	inputFilename := "input.txt"
 	outputFilename := "ColorChallengeOutput"
 

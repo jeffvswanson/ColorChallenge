@@ -11,12 +11,24 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// FormatLog sets up the logging format.
-func FormatLog() {
+// FormatLog sets up the logging file and format.
+func FormatLog() (f *os.File) {
+
+	filename := createLogfileName()
+	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	if err != nil {
+		// Cannot open log file, defaulting to stderr.
+		fmt.Println(err)
+	} else {
+		logrus.SetOutput(f)
+	}
+
 	Formatter := new(logrus.TextFormatter)
 	Formatter.TimestampFormat = "2006-01-02 15:04:05.0000"
 	Formatter.FullTimestamp = true
 	logrus.SetFormatter(Formatter)
+
+	return f
 }
 
 // ErrorCheck writes an error message and the error to a log.
@@ -32,15 +44,6 @@ func ErrorCheck(level, message string, err error) bool {
 
 // WriteToLog writes messages to a log.
 func WriteToLog(level, message string, reportedErr error) {
-	filename := createLogfileName()
-	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
-	FormatLog()
-	if err != nil {
-		// Cannot open log file, defaulting to stderr.
-		fmt.Println(err)
-	} else {
-		logrus.SetOutput(f)
-	}
 
 	logMessage := fmt.Sprintf("%v - %v", message, reportedErr)
 	switch level {
