@@ -11,18 +11,10 @@ import (
 )
 
 // Export serves as a wrapper to append a record to the given CSV file.
-func Export(filename string, record []string) error {
-
-	if filename[len(filename)-4:] != ".csv" {
-		filename = fmt.Sprintf("%v.csv", filename)
-	}
-
-	f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	errorlogging.ErrorCheck("Fatal", "Could not open CSV file:", err)
-	defer f.Close()
+func Export(f *os.File, record []string) error {
 
 	w := csv.NewWriter(f)
-	err = w.Write(record)
+	err := w.Write(record)
 	errorlogging.ErrorCheck("Fatal", "Could not write to CSV file:", err)
 	w.Flush()
 
@@ -30,12 +22,11 @@ func Export(filename string, record []string) error {
 }
 
 // CreateCSV creates a CSV file in the main project directory.
-func CreateCSV(filename string) string {
+func CreateCSV(filename string) (f *os.File) {
 
-	filename = fmt.Sprintf("%v.csv", filename)
-	f, err := os.Create(filename)
+	filename = fmt.Sprintf("%s.csv", filename)
+	f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	errorlogging.ErrorCheck("Fatal", "Could not create CSV file:", err)
-	defer f.Close()
 
-	return f.Name()
+	return f
 }

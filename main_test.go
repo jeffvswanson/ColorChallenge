@@ -1,16 +1,15 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"image"
 	"image/color"
-	"os"
 	"testing"
 
 	"github.com/sirupsen/logrus"
 )
 
+/*
 func TestCsvSetup(t *testing.T) {
 	expected := "CSV setup complete."
 	got := csvSetup("TestCSV")
@@ -30,10 +29,11 @@ func TestCsvSetup(t *testing.T) {
 		t.Errorf("csvSetup header error.\nExpected: %v\n Got:\t%v\n", expected, got)
 	}
 }
+*/
 
 func TestExtractURLs(t *testing.T) {
 	expected := "Process complete."
-	got := extractURLs("input_test.txt", "ColorChallengeOutput")
+	got := extractURLs("input_test.txt", csvfile)
 	if got != expected {
 		t.Errorf("URL extraction error. Expected: %v, Got: %v", expected, got)
 	}
@@ -126,7 +126,7 @@ func TestGetImageData(t *testing.T) {
 	logrus.SetOutput(&buf)
 
 	for _, url := range getImageTests {
-		getImageData(url, "ColorChallengeOutput.csv")
+		imageData(url, csvfile)
 		if buf.String() == "" {
 			t.Log("Expected an error string. Got an empty string.")
 		}
@@ -135,6 +135,6 @@ func TestGetImageData(t *testing.T) {
 
 func BenchmarkExtractURLs(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		extractURLs("input_test.txt", "ColorChallengeOutput")
+		extractURLs("input_test.txt", csvfile)
 	}
 }

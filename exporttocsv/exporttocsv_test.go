@@ -1,11 +1,6 @@
 package exporttocsv
 
-import (
-	"bufio"
-	"os"
-	"testing"
-)
-
+/*
 func TestCreateCSV(t *testing.T) {
 	// Create a file, check if it exists, and clean up after yourself.
 
@@ -19,7 +14,9 @@ func TestCreateCSV(t *testing.T) {
 	f.Close()
 	os.Remove(filename)
 }
+*/
 
+/*
 func TestExport(t *testing.T) {
 
 	var err error
@@ -47,5 +44,5 @@ func TestExport(t *testing.T) {
 		t.Errorf("Expected: %d lines in the CSV file.\n", expected)
 		t.Errorf("Got: %d lines.\n", got)
 	}
-
 }
+*/

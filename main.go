@@ -33,19 +33,24 @@ type logInfo struct {
 }
 
 var wg sync.WaitGroup
-var logfile *os.File
+var logfile, csvfile *os.File
 
 func init() {
 	// Specifically limited to 1 CPU
 	runtime.GOMAXPROCS(1)
+
 	logfile = log.FormatLog()
+
+	csvfile = exporttocsv.CreateCSV("ColorChallengeOutput")
+	headerRecord := []string{"URL", "top_color1", "top_color2", "top_color3"}
+	exporttocsv.Export(csvfile, headerRecord)
 }
 
 func main() {
 
 	defer logfile.Close()
+	defer csvfile.Close()
 	inputFilename := "input.txt"
-	outputFilename := "ColorChallengeOutput"
 
 	// Setup
 	status := logInfo{
@@ -54,37 +59,20 @@ func main() {
 	}
 	log.WriteToLog(status.Level, status.Message, nil)
 
-	// CSV file setup
-	status = logInfo{
-		Level:   "Info",
-		Message: csvSetup(outputFilename),
-	}
-	log.WriteToLog(status.Level, status.Message, nil)
-
 	// Grab the URLs to parse
 	status = logInfo{
 		Level:   "Info",
-		Message: extractURLs(inputFilename, outputFilename),
+		Message: extractURLs(inputFilename, csvfile),
 	}
 	log.WriteToLog(status.Level, status.Message, nil)
 }
 
-func csvSetup(filename string) string {
-
-	filename = exporttocsv.CreateCSV(filename)
-	headerRecord := []string{"URL", "top_color1", "top_color2", "top_color3"}
-	exporttocsv.Export(filename, headerRecord)
-
-	return "CSV setup complete."
-}
-
-func extractURLs(inFilename, outFilename string) string {
+// extractURLs pulls the URLs from the given file for image processing.
+func extractURLs(inFilename string, csv *os.File) string {
 
 	f, err := os.Open(inFilename)
 	log.ErrorCheck("Fatal", "URL extraction failed during setup.", err)
 	defer f.Close()
-
-	outFilename = fmt.Sprintf("%s.csv", outFilename)
 
 	scanner := bufio.NewScanner(f)
 
@@ -94,7 +82,7 @@ func extractURLs(inFilename, outFilename string) string {
 		wg.Add(1)
 		go func() {
 			for url := range urlChan {
-				getImageData(url, outFilename)
+				imageData(url, csv)
 			}
 			wg.Done()
 		}()
@@ -110,7 +98,8 @@ func extractURLs(inFilename, outFilename string) string {
 	return "Process complete."
 }
 
-func getImageData(url, csv string) {
+// imageData extracts the image from a given URL.
+func imageData(url string, csv *os.File) {
 
 	resp, err := http.Get(url)
 	if log.ErrorCheck("Warn", "http.Get failure", err) {
@@ -128,8 +117,9 @@ func getImageData(url, csv string) {
 	exporttocsv.Export(csv, output)
 }
 
+// countColors finds pixel color mapping of an image in RGB format.
 func countColors(img image.Image) []string {
-	// Find pixel color mapping
+
 	timesAppeared := make(map[colorCode]int)
 
 	for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
@@ -145,6 +135,7 @@ func countColors(img image.Image) []string {
 	return output
 }
 
+// sortColors sorts from the most common color to the least common color.
 func sortColors(timesAppeared map[colorCode]int) []string {
 	// Struct to extract colorCode, key, and times it appeared, value,
 	// from the map.
@@ -164,8 +155,10 @@ func sortColors(timesAppeared map[colorCode]int) []string {
 	return output
 }
 
+// extractTopColors pulls out the top 3 top colors in the image and
+// prints them in hexadecimal format.
 func extractTopColors(xColors []kv) []string {
-	// Extract the top 3 colors
+
 	topColors := make([]string, 4)
 	for i := 0; i < 3; i++ {
 		// Convert RGB color codes to hexadecimal, #000000 - #FFFFFF
