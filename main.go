@@ -13,9 +13,9 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/jeffvswanson/colorchallenge/pkg/exporttocsv"
+	"github.com/jeffvswanson/colorchallenge/exporttocsv"
 
-	log "github.com/jeffvswanson/colorchallenge/pkg/errorlogging"
+	log "github.com/jeffvswanson/colorchallenge/errorlogging"
 )
 
 type colorCode struct {
