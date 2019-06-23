@@ -1,41 +1,63 @@
 package exporttocsv
 
-/*
+import (
+	"bufio"
+	"os"
+	"testing"
+)
+
+// TestCreateCSV creates a CSV file, checks if it exists, and cleans up.
 func TestCreateCSV(t *testing.T) {
-	// Create a file, check if it exists, and clean up after yourself.
 
 	filename := "TestCSV"
 
-	filename = CreateCSV(filename)
-	f, err := os.Open(filename)
-	if err != nil {
-		t.Errorf("Error creating CSV. Check CreateCSV().\n")
-	}
-	f.Close()
-	os.Remove(filename)
-}
-*/
+	f := CreateCSV(filename)
 
-/*
+	err := f.Close()
+	if err != nil {
+		t.Errorf("%v\n", err)
+	}
+	err = os.Remove(f.Name())
+	if err != nil {
+		t.Errorf("%v\n", err)
+	}
+}
+
 func TestExport(t *testing.T) {
 
 	var err error
 	filename := "TestCSV"
+	f := CreateCSV(filename)
+	filename = f.Name()
+
 	record := []string{"item 1", "item2", "item3"}
 
 	expected := 10
 	for i := 0; i < expected; i++ {
-		err = Export(filename, record)
+		err = Export(f, record)
+		if err != nil {
+			t.Errorf("Error exporting record to CSV file.")
+		}
+
 	}
+	f.Close()
+
+	csv, err := os.Open(filename)
 	if err != nil {
-		t.Errorf("Error exporting record to CSV file.")
+		t.Errorf("%v\n", err)
 	}
+	defer func() {
+		err = csv.Close()
+		if err != nil {
+			t.Errorf("%v\n", err)
+		}
+		err = os.Remove(filename)
+		if err != nil {
+			t.Errorf("%v\n", err)
+		}
+	}()
 
-	f, _ := os.Open("TestCSV.csv")
-	defer os.Remove("TestCSV.csv")
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
+	scanner := bufio.NewScanner(csv)
 	got := 0
 	for scanner.Scan() {
 		got++
@@ -44,5 +66,5 @@ func TestExport(t *testing.T) {
 		t.Errorf("Expected: %d lines in the CSV file.\n", expected)
 		t.Errorf("Got: %d lines.\n", got)
 	}
+
 }
-*/
