@@ -91,6 +91,7 @@ func extractURLs(inFilename string, csv *os.File) string {
 	for scanner.Scan() {
 		urlChan <- scanner.Text()
 	}
+	log.ErrorCheck("Fatal", "Error scanning:", err)
 	close(urlChan)
 
 	wg.Wait()
