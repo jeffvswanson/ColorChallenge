@@ -34,11 +34,7 @@ func TestExport(t *testing.T) {
 
 	expected := 10
 	for i := 0; i < expected; i++ {
-		err = Export(f, record)
-		if err != nil {
-			t.Errorf("Error exporting record to CSV file.")
-		}
-
+		Export(f, record)
 	}
 	f.Close()
 

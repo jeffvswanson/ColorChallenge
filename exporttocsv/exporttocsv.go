@@ -11,14 +11,12 @@ import (
 )
 
 // Export serves as a wrapper to append a record to the given CSV file.
-func Export(f *os.File, record []string) error {
+func Export(f *os.File, record []string) {
 
 	w := csv.NewWriter(f)
 	err := w.Write(record)
 	errorlogging.ErrorCheck("Fatal", "Could not write to CSV file:", err)
 	w.Flush()
-
-	return err
 }
 
 // CreateCSV creates a CSV file in the main project directory.
