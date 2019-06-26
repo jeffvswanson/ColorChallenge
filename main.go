@@ -103,10 +103,12 @@ func extractURLs(inFilename string, csv *os.File) string {
 func imageData(url string, csv *os.File) {
 
 	resp, err := http.Get(url)
-	if log.ErrorCheck("Warn", "http.Get failure", err) {
+	statusResponse := fmt.Sprintf("HTTP Response Status: %s", resp.Status)
+	if log.ErrorCheck("Warn", "http.Get failure"+statusResponse, err) {
 		return
 	}
 	defer resp.Body.Close()
+
 	// Extract the image information.
 	img, _, err := image.Decode(resp.Body)
 	if log.ErrorCheck("Warn", fmt.Sprintf("%v image decode error", url), err) {
