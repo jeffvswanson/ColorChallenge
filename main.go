@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"container/heap"
 	"fmt"
 	"image"
 	"image/color"
@@ -10,7 +11,6 @@ import (
 	"net/http"
 	"os"
 	"runtime"
-	"sort"
 	"sync"
 
 	"github.com/jeffvswanson/colorchallenge/exporttocsv"
@@ -18,13 +18,34 @@ import (
 	log "github.com/jeffvswanson/colorchallenge/errorlogging"
 )
 
+// A colorHeap is a max-heap of the colors found from an image.
+type colorHeap []colorNode
+
+func (c colorHeap) Len() int           { return len(c) }
+func (c colorHeap) Less(i, j int) bool { return c[i].Occurrences < c[j].Occurrences }
+func (c colorHeap) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
+
+func (c *colorHeap) Push(x interface{}) {
+	// Push and Pop use pointer receivers because they modify the
+	// slices's length not just its contents.
+	*c = append(*c, x.(colorNode))
+}
+
+func (c *colorHeap) Pop() interface{} {
+	old := *c
+	n := len(old)
+	x := old[n-1]
+	*c = old[0 : n-1]
+	return x
+}
+
 type colorCode struct {
 	Red, Green, Blue uint8
 }
 
-type kv struct {
-	Key   colorCode
-	Value int
+type colorNode struct {
+	Color       colorCode
+	Occurrences int
 }
 
 type logInfo struct {
@@ -103,8 +124,7 @@ func extractURLs(inFilename string, csv *os.File) string {
 func imageData(url string, csv *os.File) {
 
 	resp, err := http.Get(url)
-	statusResponse := fmt.Sprintf("HTTP Response Status: %s", resp.Status)
-	if log.ErrorCheck("Warn", "http.Get failure"+statusResponse, err) {
+	if log.ErrorCheck("Warn", "http.Get failure", err) {
 		return
 	}
 	defer resp.Body.Close()
@@ -133,41 +153,38 @@ func countColors(img image.Image) []string {
 		}
 	}
 	// Sort colors in descending order.
-	output := sortColors(timesAppeared)
+	output := heapify(timesAppeared)
 
 	return output
 }
 
-// sortColors sorts from the most common color to the least common color.
-func sortColors(timesAppeared map[colorCode]int) []string {
-	// Struct to extract colorCode, key, and times it appeared, value,
-	// from the map.
-	// Only stable for Go 1.8 and higher
+// heapify turns the color set into a max-heap data structure
+func heapify(timesAppeared map[colorCode]int) []string {
 
-	// Sort the colors from largest value to smallest value.
-	var sortAppearances []kv
+	c := make(colorHeap, 0, len(timesAppeared))
 
 	for color, appeared := range timesAppeared {
-		sortAppearances = append(sortAppearances, kv{color, appeared})
+		// Multiply by -1 since standard heap is a min-heap, this makes
+		// it a max-heap.
+		c = append(c, colorNode{color, appeared * -1})
 	}
-	sort.Slice(sortAppearances, func(i, j int) bool {
-		return sortAppearances[i].Value > sortAppearances[j].Value
-	})
-	output := extractTopColors(sortAppearances)
 
-	return output
+	h := &c
+	heap.Init(h)
+
+	return extractTopColors(h)
 }
 
 // extractTopColors pulls out the top 3 top colors in the image and
-// prints them in hexadecimal format.
-func extractTopColors(xColors []kv) []string {
+// returns them in hexadecimal format.
+func extractTopColors(c *colorHeap) []string {
 
 	topColors := make([]string, 4)
-	for i := 0; i < 3; i++ {
-		// Convert RGB color codes to hexadecimal, #000000 - #FFFFFF
-		hexColor := fmt.Sprintf("#%.2X%.2X%.2X", xColors[i].Key.Red,
-			xColors[i].Key.Green, xColors[i].Key.Blue)
-		topColors[i+1] = hexColor
+	for i := 1; i < 4; i++ {
+		color := heap.Pop(c).(colorNode)
+		hexColor := fmt.Sprintf("#%.2X%.2X%.2X", color.Color.Red,
+			color.Color.Green, color.Color.Blue)
+		topColors[i] = hexColor
 	}
 	return topColors
 }

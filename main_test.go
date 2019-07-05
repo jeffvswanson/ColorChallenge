@@ -1,12 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"image"
 	"image/color"
 	"testing"
-
-	"github.com/sirupsen/logrus"
 )
 
 func TestExtractURLs(t *testing.T) {
@@ -18,37 +15,19 @@ func TestExtractURLs(t *testing.T) {
 }
 
 func TestExtractTopColors(t *testing.T) {
-	xColorAppearance := []kv{
-		{colorCode{0, 0, 0}, 5},       // black
-		{colorCode{255, 255, 255}, 4}, // white
-		{colorCode{255, 0, 0}, 3},     // red
-		{colorCode{0, 255, 0}, 2},     // green
-		{colorCode{0, 0, 255}, 1},     // blue
+	timesAppeared := map[colorCode]int{
+		colorCode{0, 0, 0}:       2, // black, #000000
+		colorCode{255, 255, 255}: 4, // white, #FFFFFF
+		colorCode{255, 0, 0}:     1, // red, #FF0000
+		colorCode{0, 255, 0}:     5, // green, #00FF00
+		colorCode{0, 0, 255}:     3, // blue, #0000FF
 	}
-	expected := []string{"", "#000000", "#FFFFFF", "#FF0000"}
-	got := extractTopColors(xColorAppearance)
+	expected := []string{"", "#00FF00", "#FFFFFF", "#0000FF"}
+	got := heapify(timesAppeared)
 
 	for idx, value := range expected {
 		if got[idx] != value {
 			t.Errorf("Top color extraction error. Expected: %v at index %d, Got: %v", value, idx, got[idx])
-		}
-	}
-}
-
-func TestSortColors(t *testing.T) {
-	timesAppeared := map[colorCode]int{
-		colorCode{0, 0, 0}:       2, // black
-		colorCode{255, 255, 255}: 4, // white
-		colorCode{255, 0, 0}:     1, // red
-		colorCode{0, 255, 0}:     5, // green
-		colorCode{0, 0, 255}:     3, // blue
-	}
-	expected := []string{"", "#00FF00", "#FFFFFF", "#0000FF"}
-	got := sortColors(timesAppeared)
-
-	for idx, value := range expected {
-		if got[idx] != value {
-			t.Errorf("sortcolors error. Expected: %v at index %d, Got: %v", value, idx, got[idx])
 		}
 	}
 }
@@ -88,25 +67,6 @@ func TestCountColors(t *testing.T) {
 	for _, s := range got {
 		if _, ok := expected[s]; !ok {
 			t.Errorf("countColors error. Expected: %v, Got: %v", expected, s)
-		}
-	}
-}
-
-func TestGetImageData(t *testing.T) {
-	// Testing errorChecks only as happy path is covered by TestExtractURLs.
-	getImageTests := []string{
-		"https://malformedURL",
-		"https://github.com/edent/SuperTinyIcons/blob/master/images/svg/stackoverflow.svg",
-	}
-
-	// Capture the log stream for testing
-	var buf bytes.Buffer
-	logrus.SetOutput(&buf)
-
-	for _, url := range getImageTests {
-		imageData(url, csvfile)
-		if buf.String() == "" {
-			t.Log("Expected an error string. Got an empty string.")
 		}
 	}
 }
