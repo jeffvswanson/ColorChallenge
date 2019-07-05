@@ -18,6 +18,15 @@ import (
 	log "github.com/jeffvswanson/colorchallenge/errorlogging"
 )
 
+type colorCode struct {
+	Red, Green, Blue uint8
+}
+
+type colorNode struct {
+	Color       colorCode
+	Occurrences int
+}
+
 // A colorHeap is a max-heap of the colors found from an image.
 type colorHeap []colorNode
 
@@ -37,20 +46,6 @@ func (c *colorHeap) Pop() interface{} {
 	x := old[n-1]
 	*c = old[0 : n-1]
 	return x
-}
-
-type colorCode struct {
-	Red, Green, Blue uint8
-}
-
-type colorNode struct {
-	Color       colorCode
-	Occurrences int
-}
-
-type logInfo struct {
-	Level, Message string
-	ErrorMessage   error
 }
 
 var wg sync.WaitGroup
@@ -74,25 +69,20 @@ func main() {
 	inputFilename := "input.txt"
 
 	// Setup
-	status := logInfo{
-		Level:   "Info",
-		Message: "Beginning setup.",
-	}
-	log.WriteToLog(status.Level, status.Message, nil)
+	log.WriteToLog("Info", "Beginning setup", nil)
 
 	// Grab the URLs to parse
-	status = logInfo{
-		Level:   "Info",
-		Message: extractURLs(inputFilename, csvfile),
-	}
-	log.WriteToLog(status.Level, status.Message, nil)
+	status := extractURLs(inputFilename, csvfile)
+	log.WriteToLog("Info", status, nil)
 }
 
 // extractURLs pulls the URLs from the given file for image processing.
 func extractURLs(inFilename string, csv *os.File) string {
 
 	f, err := os.Open(inFilename)
-	log.ErrorCheck("Fatal", "URL extraction failed during setup.", err)
+	if err != nil {
+		log.WriteToLog("Fatal", "URL extraction failed during setup.", err)
+	}
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
@@ -112,7 +102,9 @@ func extractURLs(inFilename string, csv *os.File) string {
 	for scanner.Scan() {
 		urlChan <- scanner.Text()
 	}
-	log.ErrorCheck("Fatal", "Error scanning:", err)
+	if err != nil {
+		log.WriteToLog("Fatal", "Error scanning: ", err)
+	}
 	close(urlChan)
 
 	wg.Wait()
@@ -124,16 +116,18 @@ func extractURLs(inFilename string, csv *os.File) string {
 func imageData(url string, csv *os.File) {
 
 	resp, err := http.Get(url)
-	if log.ErrorCheck("Warn", "http.Get failure", err) {
+	if err != nil {
+		log.WriteToLog("Warn", "http.Get failure", err)
 		return
 	}
 	defer resp.Body.Close()
 
 	// Extract the image information.
 	img, _, err := image.Decode(resp.Body)
-	if log.ErrorCheck("Warn", fmt.Sprintf("%v image decode error", url), err) {
-		return
+	if err != nil {
+		log.WriteToLog("Warn", fmt.Sprintf("%v image decode error", url), err)
 	}
+
 	// Get the output string into url,color,color,color format.
 	output := countColors(img)
 	output[0] = url

@@ -12,7 +12,7 @@ import (
 )
 
 // FormatLog sets up the logging file and format.
-func FormatLog() (f *os.File) {
+func FormatLog() *os.File {
 
 	filename := createLogfileName()
 	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
@@ -29,17 +29,6 @@ func FormatLog() (f *os.File) {
 	logrus.SetFormatter(Formatter)
 
 	return f
-}
-
-// ErrorCheck writes an error message and the error to a log.
-func ErrorCheck(level, message string, err error) bool {
-
-	var isError bool
-	if err != nil {
-		WriteToLog(level, message, err)
-		isError = true
-	}
-	return isError
 }
 
 // WriteToLog writes messages to a log.
