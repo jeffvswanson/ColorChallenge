@@ -24,12 +24,8 @@ type imageInfo struct {
 	URL string
 }
 
-type colorCode struct {
-	Red, Green, Blue uint8
-}
-
 type colorNode struct {
-	Color       colorCode
+	Color       color.Color
 	Occurrences int
 }
 
@@ -68,7 +64,7 @@ func main() {
 
 	defer logfile.Close()
 	defer csvfile.Close()
-	inputFilename := "input.txt"
+	inputFilename := "input_test.txt"
 
 	// Setup
 	log.WriteToLog("Info", "Beginning setup", nil)
@@ -90,16 +86,12 @@ func extractURLs(inFilename string, csv *os.File) string {
 	scanner := bufio.NewScanner(f)
 
 	var wg sync.WaitGroup
-	// While there may only be 1 processor, maybe we'll get lucky.
-	workers := runtime.GOMAXPROCS(-1)
 
 	urlChan := make(chan string)
 	defer close(urlChan)
 
 	images := make(chan imageInfo)
 	defer close(images)
-	// Have the URLs resp.Body sent to the images channel
-	// The workers pull the resp.Body and count the colors
 
 	// Spawn workers to prevent saturating bandwidth.
 	for i := 0; i < 10; i++ {
@@ -111,6 +103,9 @@ func extractURLs(inFilename string, csv *os.File) string {
 			wg.Done()
 		}()
 	}
+
+	// While there may only be 1 processor, maybe we'll get lucky.
+	workers := runtime.GOMAXPROCS(-1)
 
 	// Spawn workers to prevent running out of memory.
 	for i := 0; i < workers; i++ {
@@ -140,7 +135,7 @@ func extractImageData(url string, images chan<- imageInfo) {
 
 	resp, err := http.Get(url)
 	if err != nil {
-		log.WriteToLog("Warn", fmt.Sprintf("http.Get failure - %s", resp.Status), err)
+		log.WriteToLog("Warn", "http.Get failure - ", err)
 		return
 	}
 	if resp.StatusCode != http.StatusOK {
@@ -162,17 +157,17 @@ func countColors(i imageInfo, csv *os.File) {
 	defer i.p.Body.Close()
 	img, _, err := image.Decode(i.p.Body)
 	if err != nil {
-		log.WriteToLog("Warn", fmt.Sprintf("%v image decode error", i.URL), err)
+		log.WriteToLog("Warn", fmt.Sprintf("%s image decode error", i.URL), err)
 		return
 	}
 
-	timesAppeared := make(map[colorCode]int)
+	timesAppeared := make(map[color.Color]int)
 
 	for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
 		for x := img.Bounds().Min.X; x < img.Bounds().Max.X; x++ {
-			// img returns in YCbCr format, need to convert to RGB 8-bit
-			rgb := color.NRGBAModel.Convert(img.At(x, y)).(color.NRGBA)
-			timesAppeared[colorCode{rgb.R, rgb.G, rgb.B}]++
+			// img returns in YCbCr format will convert to RGB 8-bit on top 3 color return
+			yCbCr := img.At(x, y).(color.Color)
+			timesAppeared[yCbCr.(color.Color)]++
 		}
 	}
 	// Sort colors in descending order.
@@ -184,7 +179,7 @@ func countColors(i imageInfo, csv *os.File) {
 }
 
 // heapify turns the color set into a max-heap data structure
-func heapify(timesAppeared map[colorCode]int) []string {
+func heapify(timesAppeared map[color.Color]int) []string {
 
 	c := make(colorHeap, 0, len(timesAppeared))
 
@@ -202,13 +197,14 @@ func heapify(timesAppeared map[colorCode]int) []string {
 
 // extractTopColors pulls out the top 3 top colors in the image and
 // returns them in hexadecimal format.
-func extractTopColors(c *colorHeap) []string {
+func extractTopColors(h *colorHeap) []string {
 
 	topColors := make([]string, 4)
 	for i := 1; i < 4; i++ {
-		color := heap.Pop(c).(colorNode)
-		hexColor := fmt.Sprintf("#%.2X%.2X%.2X", color.Color.Red,
-			color.Color.Green, color.Color.Blue)
+		c := heap.Pop(h).(colorNode)
+		// Convert the YCbCr format to RGB
+		rgb := color.NRGBAModel.Convert(c.Color).(color.NRGBA)
+		hexColor := fmt.Sprintf("#%.2X%.2X%.2X", rgb.R, rgb.G, rgb.B)
 		topColors[i] = hexColor
 	}
 	return topColors
