@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"container/heap"
+	"errors"
 	"fmt"
 	"image"
 	"image/color"
@@ -17,6 +18,11 @@ import (
 
 	log "github.com/jeffvswanson/colorchallenge/errorlogging"
 )
+
+type imageInfo struct {
+	p   *http.Response
+	URL string
+}
 
 type colorCode struct {
 	Red, Green, Blue uint8
@@ -48,13 +54,9 @@ func (c *colorHeap) Pop() interface{} {
 	return x
 }
 
-var wg sync.WaitGroup
 var logfile, csvfile *os.File
 
 func init() {
-	// Specifically limited to 1 CPU
-	runtime.GOMAXPROCS(1)
-
 	logfile = log.FormatLog()
 
 	csvfile = exporttocsv.CreateCSV("ColorChallengeOutput")
@@ -87,13 +89,35 @@ func extractURLs(inFilename string, csv *os.File) string {
 
 	scanner := bufio.NewScanner(f)
 
-	// Spawn workers to prevent running out of memory.
+	var wg sync.WaitGroup
+	// While there may only be 1 processor, maybe we'll get lucky.
+	workers := runtime.GOMAXPROCS(-1)
+
 	urlChan := make(chan string)
-	for i := 0; i < 7; i++ {
+	defer close(urlChan)
+
+	images := make(chan imageInfo)
+	defer close(images)
+	// Have the URLs resp.Body sent to the images channel
+	// The workers pull the resp.Body and count the colors
+
+	// Spawn workers to prevent saturating bandwidth.
+	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go func() {
 			for url := range urlChan {
-				imageData(url, csv)
+				extractImageData(url, images)
+			}
+			wg.Done()
+		}()
+	}
+
+	// Spawn workers to prevent running out of memory.
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go func() {
+			for image := range images {
+				countColors(image, csv)
 			}
 			wg.Done()
 		}()
@@ -105,37 +129,42 @@ func extractURLs(inFilename string, csv *os.File) string {
 	if err != nil {
 		log.WriteToLog("Fatal", "Error scanning: ", err)
 	}
-	close(urlChan)
 
 	wg.Wait()
 
 	return "Process complete."
 }
 
-// imageData extracts the image from a given URL.
-func imageData(url string, csv *os.File) {
+// extractImageData extracts the image from a given URL.
+func extractImageData(url string, images chan<- imageInfo) {
 
 	resp, err := http.Get(url)
 	if err != nil {
-		log.WriteToLog("Warn", "http.Get failure", err)
+		log.WriteToLog("Warn", fmt.Sprintf("http.Get failure - %s", resp.Status), err)
 		return
 	}
-	defer resp.Body.Close()
-
-	// Extract the image information.
-	img, _, err := image.Decode(resp.Body)
-	if err != nil {
-		log.WriteToLog("Warn", fmt.Sprintf("%v image decode error", url), err)
+	if resp.StatusCode != http.StatusOK {
+		log.WriteToLog("Warn", fmt.Sprintf("%s http status not ok", url), errors.New(resp.Status))
+		return
+	}
+	img := imageInfo{
+		resp,
+		url,
 	}
 
-	// Get the output string into url,color,color,color format.
-	output := countColors(img)
-	output[0] = url
-	exporttocsv.Export(csv, output)
+	images <- img
 }
 
 // countColors finds pixel color mapping of an image in RGB format.
-func countColors(img image.Image) []string {
+func countColors(i imageInfo, csv *os.File) {
+
+	// Extract the image information.
+	defer i.p.Body.Close()
+	img, _, err := image.Decode(i.p.Body)
+	if err != nil {
+		log.WriteToLog("Warn", fmt.Sprintf("%v image decode error", i.URL), err)
+		return
+	}
 
 	timesAppeared := make(map[colorCode]int)
 
@@ -149,7 +178,9 @@ func countColors(img image.Image) []string {
 	// Sort colors in descending order.
 	output := heapify(timesAppeared)
 
-	return output
+	// Get the output string into url,color,color,color format.
+	output[0] = i.URL
+	exporttocsv.Export(csv, output)
 }
 
 // heapify turns the color set into a max-heap data structure
