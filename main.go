@@ -85,36 +85,36 @@ func extractURLs(inFilename string, csv *os.File) string {
 
 	scanner := bufio.NewScanner(f)
 
-	var wg sync.WaitGroup
+	var wgCPU sync.WaitGroup
+	var wgIO sync.WaitGroup
 
 	urlChan := make(chan string)
-	defer close(urlChan)
 
 	images := make(chan imageInfo)
-	defer close(images)
 
 	// Spawn workers to prevent saturating bandwidth.
-	for i := 0; i < 10; i++ {
-		wg.Add(1)
+	workersIO := 10
+	for i := 0; i < workersIO; i++ {
+		wgIO.Add(1)
 		go func() {
 			for url := range urlChan {
 				extractImageData(url, images)
 			}
-			wg.Done()
+			wgIO.Done()
 		}()
 	}
 
-	// While there may only be 1 processor, maybe we'll get lucky.
-	workers := runtime.GOMAXPROCS(-1)
+	// While constrained to 1 processor, maybe we'll get lucky.
+	workersCPU := runtime.GOMAXPROCS(-1)
 
 	// Spawn workers to prevent running out of memory.
-	for i := 0; i < workers; i++ {
-		wg.Add(1)
+	for i := 0; i < workersCPU; i++ {
+		wgCPU.Add(1)
 		go func() {
 			for image := range images {
 				countColors(image, csv)
 			}
-			wg.Done()
+			wgCPU.Done()
 		}()
 	}
 
@@ -124,8 +124,12 @@ func extractURLs(inFilename string, csv *os.File) string {
 	if err != nil {
 		log.WriteToLog("Fatal", "Error scanning: ", err)
 	}
+	close(urlChan)
 
-	wg.Wait()
+	wgIO.Wait()
+	close(images)
+
+	wgCPU.Wait()
 
 	return "Process complete."
 }
