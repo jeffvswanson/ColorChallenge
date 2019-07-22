@@ -67,11 +67,11 @@ func main() {
 	inputFilename := "input_test.txt"
 
 	// Setup
-	log.WriteToLog("Info", "Beginning setup", nil)
+	log.Write("Info", "Beginning setup", nil)
 
 	// Grab the URLs to parse
 	status := extractURLs(inputFilename, csvfile)
-	log.WriteToLog("Info", status, nil)
+	log.Write("Info", status, nil)
 }
 
 // extractURLs pulls the URLs from the given file for image processing.
@@ -79,7 +79,7 @@ func extractURLs(inFilename string, csv *os.File) string {
 
 	f, err := os.Open(inFilename)
 	if err != nil {
-		log.WriteToLog("Fatal", "URL extraction failed during setup.", err)
+		log.Write("Fatal", "URL extraction failed during setup.", err)
 	}
 	defer f.Close()
 
@@ -122,7 +122,7 @@ func extractURLs(inFilename string, csv *os.File) string {
 		urlChan <- scanner.Text()
 	}
 	if err != nil {
-		log.WriteToLog("Fatal", "Error scanning: ", err)
+		log.Write("Fatal", "Error scanning: ", err)
 	}
 	close(urlChan)
 
@@ -139,11 +139,11 @@ func extractImageData(url string, images chan<- imageInfo) {
 
 	resp, err := http.Get(url)
 	if err != nil {
-		log.WriteToLog("Warn", "http.Get failure - ", err)
+		log.Write("Warning", "http.Get failure - ", err)
 		return
 	}
 	if resp.StatusCode != http.StatusOK {
-		log.WriteToLog("Warn", fmt.Sprintf("%s http status not ok", url), errors.New(resp.Status))
+		log.Write("Warning", fmt.Sprintf("%s http status not ok", url), errors.New(resp.Status))
 		return
 	}
 	img := imageInfo{
@@ -161,7 +161,7 @@ func countColors(i imageInfo, csv *os.File) {
 	defer i.p.Body.Close()
 	img, _, err := image.Decode(i.p.Body)
 	if err != nil {
-		log.WriteToLog("Warn", fmt.Sprintf("%s image decode error", i.URL), err)
+		log.Write("Warning", fmt.Sprintf("%s image decode error", i.URL), err)
 		return
 	}
 
