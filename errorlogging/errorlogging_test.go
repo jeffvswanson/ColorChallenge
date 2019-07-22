@@ -1,9 +1,11 @@
 package errorlogging
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -43,41 +45,62 @@ func TestLogrus(t *testing.T) {
 	hook.Reset()
 }
 
-func TestWriteToLog(t *testing.T) {
+func TestWrite(t *testing.T) {
 
-	var logTests = []struct {
-		Level, Message string
-		TestErr        error
+	type logInput struct {
+		Level   string
+		TestErr error
+	}
+
+	var inputs = []logInput{
+		{"Trace Notification", errors.New("test trace error")},
+		{"Debug Notification", errors.New("test debug error")},
+		{"Info Notification", errors.New("test info error")},
+		{"Warning", errors.New("test warn error")},
+		{"Error! Error!", errors.New("test error")},
+		{"Fatal Error!", errors.New("test fatal error")},
+		{"Panic!", errors.New("test panic error")},
+	}
+
+	tests := map[string]struct {
+		input logInput
 	}{
-		{"Trace", "Trace Notification", errors.New("test trace error")},
-		{"Debug", "Debug Notification", errors.New("test debug error")},
-		{"Info", "Info Notification", errors.New("test info error")},
-		{"Warn", "Warning", errors.New("test warn error")},
-		{"Error", "Error! Error!", errors.New("test error")},
-		// Have not found a way to test around logrus call to os.Exit on fatal
-		// error. The test returns correctly when run by exiting the program
-		// and printing the fatal error message, no other test will run,
-		// however, and the test will record as failed.
-		// {"Fatal", "Fatal Error!", errors.New("test fatal error")},
-		{"Panic", "Panic!", errors.New("test panic error")},
+		"Trace":   {input: inputs[0]},
+		"Debug":   {input: inputs[1]},
+		"Info":    {input: inputs[2]},
+		"Warning": {input: inputs[3]},
+		"Error":   {input: inputs[4]},
+		"Panic":   {input: inputs[5]},
+		// Fatal works, but causes a crash included if a workaround becomes available.
+		// "Fatal":   {input: inputs[6]},
 	}
 
 	logrus.SetLevel(6)       // Log down to Trace level
 	defer logrus.SetLevel(4) // Return logging level to info after test
 
-	for _, tt := range logTests {
-		// Need a deferred recover otherwise the check on Panic will cause the test
-		// to crash.
-		if tt.Level == "Panic" {
-			defer func() { recover() }()
-		}
-		WriteToLog(tt.Level, tt.Message, tt.TestErr)
-		// Check if appropriately named logfile exists.
-		filename := fmt.Sprintf("%v.log", time.Now().Format("20060102"))
-		f, err := os.Open(filename)
-		if err != nil {
-			t.Errorf("writeToLog failure, log file does not exist.")
-		}
-		defer f.Close()
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Need a deferred recover otherwise the check on Panic will cause the test
+			// to crash.
+			if name == "Panic" {
+				defer func() { recover() }()
+			}
+			got := captureOutput(func() {
+				Write(name, tc.input.Level, tc.input.TestErr)
+			})
+			expected := fmt.Sprintf("time=\"%v\" level=%v msg=\"%v - %v\"\n", time.Now().Format(time.RFC3339), strings.ToLower(name), tc.input.Level, tc.input.TestErr)
+			if got != expected {
+				t.Errorf("\nExpected: %v != \nGot: %v", expected, got)
+			}
+		})
 	}
+}
+
+// captureOutput is a helper function to capture the output stream for testing.
+func captureOutput(f func()) string {
+	var buf bytes.Buffer
+	logrus.SetOutput(&buf)
+	f()
+	logrus.SetOutput(os.Stderr)
+	return buf.String()
 }

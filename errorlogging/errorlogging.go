@@ -31,8 +31,8 @@ func FormatLog() *os.File {
 	return f
 }
 
-// WriteToLog writes messages to a log.
-func WriteToLog(level, message string, reportedErr error) {
+// Write writes messages to a log.
+func Write(level, message string, reportedErr error) {
 
 	logMessage := fmt.Sprintf("%v - %v", message, reportedErr)
 	switch level {
@@ -42,7 +42,7 @@ func WriteToLog(level, message string, reportedErr error) {
 		logrus.Debug(logMessage)
 	case "Info":
 		logrus.Info(logMessage)
-	case "Warn":
+	case "Warning":
 		logrus.Warn(logMessage)
 	case "Error":
 		logrus.Error(logMessage)
