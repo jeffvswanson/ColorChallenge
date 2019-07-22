@@ -112,7 +112,10 @@ func extractURLs(inFilename string, csv *os.File) string {
 		wgCPU.Add(1)
 		go func() {
 			for image := range images {
-				countColors(image, csv)
+				output := countColors(image)
+				if output != nil {
+					exporttocsv.Export(csv, output)
+				}
 			}
 			wgCPU.Done()
 		}()
@@ -155,14 +158,14 @@ func extractImageData(url string, images chan<- imageInfo) {
 }
 
 // countColors finds pixel color mapping of an image in RGB format.
-func countColors(i imageInfo, csv *os.File) {
+func countColors(i imageInfo) []string {
 
 	// Extract the image information.
 	defer i.p.Body.Close()
 	img, _, err := image.Decode(i.p.Body)
 	if err != nil {
 		log.Write("Warning", fmt.Sprintf("%s image decode error", i.URL), err)
-		return
+		return nil
 	}
 
 	timesAppeared := make(map[color.Color]int)
@@ -179,7 +182,7 @@ func countColors(i imageInfo, csv *os.File) {
 
 	// Get the output string into url,color,color,color format.
 	output[0] = i.URL
-	exporttocsv.Export(csv, output)
+	return output
 }
 
 // heapify turns the color set into a max-heap data structure

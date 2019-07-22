@@ -5,6 +5,7 @@ import (
 	"testing"
 )
 
+// TestExtractURLs also tests extractImageData and countColors.
 func TestExtractURLs(t *testing.T) {
 	expected := "Process complete."
 	got := extractURLs("input_test.txt", csvfile)
@@ -40,29 +41,37 @@ func TestExtractTopColors(t *testing.T) {
 // 	topLeft := image.Point{0, 0}
 // 	bottomRight := image.Point{width, height}
 
-// 	img := image.NewNRGBA(image.Rectangle{topLeft, bottomRight})
+// 	img := image.NewYCbCr(image.Rectangle{topLeft, bottomRight}, 0)
 
-// 	r := color.NRGBA{255, 0, 0, 0}
-// 	g := color.NRGBA{0, 255, 0, 0}
-// 	b := color.NRGBA{0, 0, 255, 0}
+// 	r := color.YCbCr{75, 84, 255}
+// 	g := color.YCbCr{149, 43, 21}
+// 	b := color.YCbCr{29, 255, 107}
 
 // 	// Build the even color partitions
 // 	for y := 0; y < height; y++ {
 // 		for x := 0; x < width; x++ {
+// 			yi := img.YOffset(x, y)
+// 			ci := img.COffset(x, y)
 // 			switch {
 // 			case x < width/3: // left third
-// 				img.Set(x, y, r)
+// 				img.Y[yi] = r.Y
+// 				img.Cb[ci] = r.Cb
+// 				img.Cr[ci] = r.Cr
 // 			case x >= width/3 && x < 2*width/3: // middle third
-// 				img.Set(x, y, g)
+// 				img.Y[yi] = g.Y
+// 				img.Cb[ci] = g.Cb
+// 				img.Cr[ci] = g.Cr
 // 			case x >= 2*width/3: // right third
-// 				img.Set(x, y, b)
+// 				img.Y[yi] = b.Y
+// 				img.Cb[ci] = b.Cb
+// 				img.Cr[ci] = b.Cr
 // 			}
 // 		}
 // 	}
 
 // 	// Use a map to check if the values are in the returned []string
 // 	// since we can't guarantee the order of the slice.
-// 	expected := map[string]int{"": 0, "#FF0000": 0, "#00FF00": 0, "#0000FF": 0}
+// 	expected := map[string]int{"": 0, "#FF0000": 0, "#00FF00": 0, "#0000FE": 0}
 // 	got := countColors(img)
 // 	for _, s := range got {
 // 		if _, ok := expected[s]; !ok {
