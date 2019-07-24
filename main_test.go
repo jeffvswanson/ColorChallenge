@@ -33,6 +33,12 @@ func TestExtractTopColors(t *testing.T) {
 	}
 }
 
+func BenchmarkExtractURLs(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		extractURLs("input_test.txt", csvfile)
+	}
+}
+
 // func TestCountColors(t *testing.T) {
 // 	// Create an evenly partitioned 3-color test image
 // 	width := 90
@@ -79,9 +85,3 @@ func TestExtractTopColors(t *testing.T) {
 // 		}
 // 	}
 // }
-
-func BenchmarkExtractURLs(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		extractURLs("input_test.txt", csvfile)
-	}
-}
